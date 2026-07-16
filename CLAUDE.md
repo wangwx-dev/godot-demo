@@ -70,6 +70,6 @@ godot-demo/
 
 ## 参考
 
-- **核心玩法设计见 `docs/game-design.md`**——做功能前先对照设计支柱和 MVP 范围
+- **核心玩法设计见 `docs/game-design.md`**——做功能前先对照设计支柱和 MVP 范围；子系统设计（武器等）在 docs/ 下各自成文
 
 - 官方示例项目在 `D:\personal\godot-demo-projects\`（2d/ 目录下有平台跳跃、俯视角等完整示例）
