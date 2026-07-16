@@ -1,0 +1,13 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# 导出产物
+/build/
+/exports/
+*.pck
+export_presets.cfg
+
+# 系统文件
+.DS_Store
+Thumbs.db
