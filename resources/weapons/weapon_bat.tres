@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3 uid="uid://cwep0dat01bat"]
+
+[ext_resource type="Script" path="res://resources/weapon_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "钉板球棒"
+slot = 0
+damage = 16
+interval = 0.9
+attack_range = 80.0
+geometry = 0
+geometry_params = {
+"arc_degrees": 150.0,
+"windup": 0.15
+}
+knockback = 60.0

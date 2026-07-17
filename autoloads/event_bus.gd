@@ -12,3 +12,4 @@ signal backpack_changed
 signal player_health_changed(current: int, max_value: int)
 signal player_died
 signal player_leveled_up(level: int)
+signal player_xp_changed(xp: int, needed: int)

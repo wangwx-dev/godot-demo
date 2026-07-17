@@ -1,0 +1,50 @@
+class_name WeaponArc
+extends WeaponBase
+## 弧形挥砍（球棒）：朝敌人最密集的方向挥，命中扇形内全体并击退（weapon-design）。
+## 站位即瞄准——方向由范围内敌人位置的合向量决定，可预测。
+
+var _swing_direction: Vector2 = Vector2.RIGHT
+var _swing_age: float = 1.0
+
+@onready var _arc_degrees: float = data.geometry_params.get("arc_degrees", 150.0)
+
+
+func _process(delta: float) -> void:
+	_swing_age += delta
+	if _swing_age < 0.18:
+		queue_redraw()
+	elif _swing_age - delta < 0.18:
+		queue_redraw()  # 最后一帧清掉残影
+
+
+func _try_attack() -> bool:
+	var targets: Array[EnemyBase] = _enemies_in_range()
+	if targets.is_empty():
+		return false
+	# 最密方向 = 范围内敌人相对方位的合向量
+	var direction_sum: Vector2 = Vector2.ZERO
+	for enemy in targets:
+		direction_sum += (enemy.global_position - global_position).normalized()
+	_swing_direction = direction_sum.normalized() if direction_sum.length() > 0.01 \
+			else (targets[0].global_position - global_position).normalized()
+	var half_arc: float = deg_to_rad(_arc_degrees) / 2.0
+	for enemy in targets:
+		var to_enemy: Vector2 = enemy.global_position - global_position
+		if absf(_swing_direction.angle_to(to_enemy)) <= half_arc:
+			enemy.take_damage(data.damage, to_enemy.normalized() * data.knockback * 6.0)
+	_swing_age = 0.0
+	queue_redraw()
+	return true
+
+
+func _draw() -> void:
+	if _swing_age >= 0.18:
+		return
+	var alpha: float = 1.0 - _swing_age / 0.18
+	var base_angle: float = _swing_direction.angle()
+	var half_arc: float = deg_to_rad(_arc_degrees) / 2.0
+	var points: PackedVector2Array = [Vector2.ZERO]
+	for i in 13:
+		var angle: float = base_angle - half_arc + deg_to_rad(_arc_degrees) * i / 12.0
+		points.append(Vector2.from_angle(angle) * data.attack_range)
+	draw_colored_polygon(points, Color(0.9, 0.9, 0.8, 0.35 * alpha))

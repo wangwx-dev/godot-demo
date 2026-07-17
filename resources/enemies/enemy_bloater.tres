@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3 uid="uid://cend2ata03blo"]
+
+[ext_resource type="Script" path="res://resources/enemy_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "臃肿者"
+max_hp = 90
+speed = 70.0
+contact_damage = 10
+damage_interval = 0.5
+xp_drop = 3
+gold_chance = 0.3
+sprite_scale = 1.5
+outline_color = Color(0.72, 0.6, 0.25, 1)

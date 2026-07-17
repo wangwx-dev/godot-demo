@@ -37,6 +37,10 @@ func _process(_delta: float) -> void:
 		RunState.day, RunState.TOTAL_DAYS, RunState.gold,
 		RunState.backpack.size(), RunState.BACKPACK_SIZE,
 	])
+	lines.append("hp %d/%d  lv %d (%d/%d xp)" % [
+		RunState.hp, RunState.max_hp, RunState.level,
+		RunState.xp, RunState.xp_needed(RunState.level),
+	])
 	lines.append("enemies %d" % enemy_count)
 	if heat >= 0.0:
 		lines.append("heat %.1f  interval %.2fs" % [heat, spawn_interval])

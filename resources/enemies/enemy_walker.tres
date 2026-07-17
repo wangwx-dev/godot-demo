@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3 uid="uid://cend0ata01wal"]
+
+[ext_resource type="Script" path="res://resources/enemy_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "普通丧尸"
+max_hp = 30
+speed = 120.0
+contact_damage = 10
+damage_interval = 0.5
+xp_drop = 1
+gold_chance = 0.1
+sprite_scale = 1.0
+outline_color = Color(0.25, 0.42, 0.22, 1)

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3 uid="uid://cwep1dat02pis"]
+
+[ext_resource type="Script" path="res://resources/weapon_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "手枪"
+slot = 0
+damage = 11
+interval = 0.55
+attack_range = 500.0
+geometry = 1
+geometry_params = {
+"bullet_speed": 600.0,
+"pierce": 0
+}
+knockback = 0.0
