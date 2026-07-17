@@ -7,13 +7,17 @@ extends Node2D
 @export var data: WeaponData
 
 var _cooldown: float = 0.0
+var _owner_dead: bool = false
 
 
 func _ready() -> void:
 	add_to_group("weapons")  # 三选一"持有才入池"判定读这个组
+	EventBus.player_died.connect(func() -> void: _owner_dead = true)
 
 
 func _physics_process(delta: float) -> void:
+	if _owner_dead:
+		return
 	_cooldown -= delta
 	if _cooldown > 0.0:
 		return

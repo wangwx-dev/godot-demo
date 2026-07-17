@@ -13,6 +13,7 @@ const PICKUP_SCENE: PackedScene = preload("res://scenes/entities/pickups/pickup.
 
 var _current_weapon: WeaponBase
 var _director: HeatDirector
+var _death_layer: CanvasLayer
 
 @onready var player: Player = $Player
 
@@ -36,6 +37,7 @@ func _ready() -> void:
 	molotov.data = MOLOTOV_DATA
 	player.add_child(molotov)
 	add_child(LevelUpMenu.new())
+	EventBus.player_died.connect(_on_player_died)
 	queue_redraw()
 
 
@@ -51,6 +53,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			# 快进到死线前 70s，验证最后 60s 警告 + 崩溃（Debug 门控）
 			if OS.is_debug_build():
 				_director.map_time = HeatDirector.DEADLINE - 70.0
+		KEY_R:
+			# 死亡后重开一局（临时试玩循环，正式死亡结算归 M7）
+			if _death_layer != null:
+				RunState.reset()
+				get_tree().reload_current_scene()
 
 
 func _equip(weapon_data: WeaponData) -> void:
@@ -63,6 +70,29 @@ func _equip(weapon_data: WeaponData) -> void:
 	_current_weapon.data = weapon_data
 	player.add_child(_current_weapon)
 	print("[TestArena] 武器: %s" % weapon_data.display_name)
+
+
+## 死亡提示（临时版）：变暗红+不能动=死了，挂个字免得看不懂；正式结算画面归 M7。
+func _on_player_died() -> void:
+	_death_layer = CanvasLayer.new()
+	_death_layer.layer = 99
+	var dim: ColorRect = ColorRect.new()
+	dim.color = Color(0.1, 0.0, 0.0, 0.45)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_death_layer.add_child(dim)
+	var label: Label = Label.new()
+	label.text = "你死了
+本局收益全丢（设计如此）
+
+按 R 重开"
+	label.add_theme_font_size_override("font_size", 40)
+	label.add_theme_color_override("font_color", Color(0.9, 0.3, 0.25))
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.set_anchors_preset(Control.PRESET_CENTER)
+	label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	label.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_death_layer.add_child(label)
+	add_child(_death_layer)
 
 
 ## 图边界物理墙（层 1）：玩家和敌人都撞得住，红框只是它的可视化。
