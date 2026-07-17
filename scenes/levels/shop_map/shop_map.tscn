@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://bgpkm1igwtlc7"]
+
+[ext_resource type="Script" path="res://scenes/levels/shop_map/shop_map.gd" id="1_shop"]
+[ext_resource type="PackedScene" uid="uid://dy2dml81mr04p" path="res://scenes/entities/player/player.tscn" id="2_player"]
+
+[node name="ShopMap" type="Node2D"]
+script = ExtResource("1_shop")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(180, 360)

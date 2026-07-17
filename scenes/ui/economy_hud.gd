@@ -2,6 +2,7 @@ class_name EconomyHud
 extends CanvasLayer
 ## 临时经济 HUD（M4）：HP / 金币 / 背包 8 格。正式 HUD 四簇归 M7（ui-design）。
 
+var _day_label: Label
 var _hp_label: Label
 var _gold_label: Label
 var _backpack_label: Label
@@ -13,6 +14,7 @@ func _ready() -> void:
 	vbox.position = Vector2(16, 16)
 	vbox.add_theme_constant_override("separation", 4)
 	add_child(vbox)
+	_day_label = _make_label(vbox, 17)
 	_hp_label = _make_label(vbox, 22)
 	_gold_label = _make_label(vbox, 18)
 	_backpack_label = _make_label(vbox, 15)
@@ -32,6 +34,10 @@ func _make_label(parent: Node, size: int) -> Label:
 
 
 func _refresh() -> void:
+	_day_label.text = "第 %d/%d 天 · %s图" % [
+			mini(RunState.day, RunState.TOTAL_DAYS), RunState.TOTAL_DAYS,
+			MapFlow.type_name(RunState.current_map_type)]
+	_day_label.add_theme_color_override("font_color", MapFlow.type_color(RunState.current_map_type))
 	_hp_label.text = "HP %d / %d" % [RunState.hp, RunState.max_hp]
 	_hp_label.add_theme_color_override("font_color",
 			Color(0.4, 0.9, 0.4) if RunState.hp > RunState.max_hp / 3 else Color(0.95, 0.3, 0.25))
@@ -41,7 +47,7 @@ func _refresh() -> void:
 	for item in RunState.backpack:
 		names.append(item.display_name)
 	_backpack_label.text = "背包 %d/%d  %s" % [
-			RunState.backpack.size(), RunState.BACKPACK_SIZE, " ".join(names)]
+			RunState.backpack.size(), RunState.backpack_cap, " ".join(names)]
 	_backpack_label.add_theme_color_override("font_color",
-			Color(0.95, 0.6, 0.3) if RunState.backpack.size() >= RunState.BACKPACK_SIZE
+			Color(0.95, 0.6, 0.3) if RunState.backpack.size() >= RunState.backpack_cap
 			else Color(0.85, 0.85, 0.8))

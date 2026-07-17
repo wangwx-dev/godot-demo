@@ -7,6 +7,7 @@ signal run_ended(victory: bool)
 signal day_advanced(day: int)
 signal heat_changed(heat: float)
 signal deadline_collapsed
+signal elite_killed  ## 精英被击杀（M6：10s 刷入安全窗 + 赏金掉落已发）
 signal gold_changed(total: int)
 signal backpack_changed
 signal player_health_changed(current: int, max_value: int)

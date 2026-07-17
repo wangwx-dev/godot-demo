@@ -3,7 +3,7 @@ extends Node2D
 ## 掉落拾取物（经验球/金币），对象池复用（enemy-design）。
 ## 无物理体：每帧距离判定 + 进拾取半径后磁吸加速飞向玩家。
 
-enum Kind { XP, GOLD }
+enum Kind { XP, GOLD, UPGRADE }  ## UPGRADE=精英掉落的蓝档强化拾取物（M6）
 
 const COLLECT_DISTANCE: float = 14.0
 const MAGNET_ACCEL: float = 1400.0
@@ -50,6 +50,11 @@ func _collect() -> void:
 			RunState.add_xp(amount)
 		Kind.GOLD:
 			RunState.add_gold(amount)
+		Kind.UPGRADE:
+			# 蓝档强化拾取物：开一次蓝卡限定三选一（enemy-design 精英掉落）
+			var menu: LevelUpMenu = get_tree().get_first_node_in_group("level_up_menu") as LevelUpMenu
+			if menu != null:
+				menu.open_bonus(LevelUpMenu.Session.ELITE)
 	_active = false
 	hide()
 	var pool: ObjectPool = get_parent() as ObjectPool
@@ -60,7 +65,13 @@ func _collect() -> void:
 
 
 func _draw() -> void:
-	if kind == Kind.XP:
-		draw_circle(Vector2.ZERO, 5.0, Color(0.35, 0.85, 0.95))
-	else:
-		draw_circle(Vector2.ZERO, 6.0, Color(0.95, 0.8, 0.2))
+	match kind:
+		Kind.XP:
+			draw_circle(Vector2.ZERO, 5.0, Color(0.35, 0.85, 0.95))
+		Kind.GOLD:
+			draw_circle(Vector2.ZERO, 6.0, Color(0.95, 0.8, 0.2))
+		Kind.UPGRADE:
+			# 蓝色菱形（比金币大一圈——精英战利品的地位）
+			draw_colored_polygon(PackedVector2Array([
+					Vector2(0, -10), Vector2(8, 0), Vector2(0, 10), Vector2(-8, 0)]),
+					Color(0.35, 0.6, 0.95))

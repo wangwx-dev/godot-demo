@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://c21wvsug6m3ea"]
+
+[ext_resource type="Script" path="res://scenes/entities/enemies/enemy_elite.gd" id="1_elite"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 14.0
+
+[node name="EnemyElite" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_elite")
+
+[node name="Body" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-16, 0, 0, -16, 16, 0, 0, 16)
+color = Color(0.55, 0.3, 0.15, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_body")

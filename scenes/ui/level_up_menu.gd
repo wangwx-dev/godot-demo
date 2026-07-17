@@ -28,7 +28,12 @@ const RARITY_COLORS: Array[Color] = [
 	Color(0.7, 0.4, 0.9),
 ]
 
+## 弹窗会话类型：升级 / 付费重整构筑（休整图）/ 精英战利品（蓝卡限定）
+enum Session { LEVEL, BONUS, ELITE }
+
 var _pending_levels: int = 0
+var _bonus_queue: Array[int] = []  ## 排队的非升级会话（Session 值）
+var _session: int = Session.LEVEL
 var _offer: Array[UpgradeData] = []
 var _reroll_count: int = 0  ## 本次三选一内的重随次数，每次弹窗重置（试玩校准：原设计每局累计）
 
@@ -41,6 +46,7 @@ var _skip_button: Button
 
 func _ready() -> void:
 	layer = 95
+	add_to_group("level_up_menu")  # 精英战利品拾取物经组找到本菜单
 	process_mode = Node.PROCESS_MODE_ALWAYS  # 暂停时仍可交互
 	visible = false
 	_build_ui()
@@ -87,20 +93,29 @@ func _on_leveled_up(_level: int) -> void:
 		_open()
 
 
+## 外部触发的奖励三选一：休整图重整构筑（BONUS）/精英掉落（ELITE，蓝卡限定）。
+func open_bonus(session: int) -> void:
+	_bonus_queue.append(session)
+	if not visible:
+		_open()
+
+
 func _open() -> void:
 	get_tree().paused = true
 	visible = true
 	_reroll_count = 0
+	_session = Session.LEVEL
+	if _pending_levels <= 0 and not _bonus_queue.is_empty():
+		_session = _bonus_queue.pop_front()
 	_roll_offer()
 	_refresh()
 
 
 func _close() -> void:
-	_pending_levels -= 1
-	if _pending_levels > 0:
-		_reroll_count = 0
-		_roll_offer()
-		_refresh()
+	if _session == Session.LEVEL:
+		_pending_levels -= 1
+	if _pending_levels > 0 or not _bonus_queue.is_empty():
+		_open()
 		return
 	visible = false
 	get_tree().paused = false
@@ -124,6 +139,12 @@ func _eligible_pool() -> Array[UpgradeData]:
 func _roll_offer() -> void:
 	var rng: RandomNumberGenerator = RunRng.stream("upgrade")
 	var pool: Array[UpgradeData] = _eligible_pool()
+	if _session == Session.ELITE:
+		# 精英战利品：蓝档限定（enemy-design"必掉蓝档以上"）；蓝卡拿满则退回全池
+		var blues: Array[UpgradeData] = pool.filter(
+				func(u: UpgradeData) -> bool: return u.rarity == UpgradeData.Rarity.BLUE)
+		if not blues.is_empty():
+			pool = blues
 	_offer.clear()
 	while _offer.size() < 3 and not pool.is_empty():
 		var whites: Array[UpgradeData] = pool.filter(
@@ -141,7 +162,14 @@ func _roll_offer() -> void:
 
 
 func _refresh() -> void:
-	_title.text = "升级！ Lv %d" % RunState.level
+	match _session:
+		Session.BONUS:
+			_title.text = "重整构筑"
+		Session.ELITE:
+			_title.text = "精英战利品！"
+		_:
+			_title.text = "升级！ Lv %d" % RunState.level
+	_skip_button.text = "跳过（+%d 金）" % SKIP_REWARD if _session == Session.LEVEL else "放弃"
 	for child in _card_box.get_children():
 		child.queue_free()
 	for upgrade in _offer:
@@ -192,5 +220,6 @@ func _on_reroll() -> void:
 
 
 func _on_skip() -> void:
-	RunState.add_gold(SKIP_REWARD)
+	if _session == Session.LEVEL:
+		RunState.add_gold(SKIP_REWARD)  # 补偿仅限升级弹窗（付费/战利品跳过没有奖励）
 	_close()

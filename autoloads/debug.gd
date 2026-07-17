@@ -10,6 +10,8 @@ var spawn_interval: float = -1.0
 
 var _label: Label
 var _overlay_visible: bool = true
+var _shot_frame: int = 0  # --shot=N：第 N 帧存主视口截图后退出（无人值守 QA）
+var _frame_count: int = 0
 
 
 func _ready() -> void:
@@ -17,6 +19,9 @@ func _ready() -> void:
 		set_process(false)
 		set_process_unhandled_input(false)
 		return
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--shot="):
+			_shot_frame = int(arg.trim_prefix("--shot="))
 	var layer: CanvasLayer = CanvasLayer.new()
 	layer.layer = 100
 	_label = Label.new()
@@ -27,6 +32,14 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	_frame_count += 1
+	if _shot_frame > 0 and _frame_count >= _shot_frame:
+		_shot_frame = 0
+		var img: Image = get_viewport().get_texture().get_image()
+		var out_path: String = "res://tools/previews/ingame_view.png"
+		img.save_png(ProjectSettings.globalize_path(out_path))
+		print("[Debug] 截图 -> ", out_path)
+		get_tree().quit()
 	_label.visible = _overlay_visible
 	if not _overlay_visible:
 		return
@@ -35,7 +48,7 @@ func _process(_delta: float) -> void:
 	lines.append("seed %d" % RunRng.run_seed)
 	lines.append("day %d/%d  gold %d  bag %d/%d" % [
 		RunState.day, RunState.TOTAL_DAYS, RunState.gold,
-		RunState.backpack.size(), RunState.BACKPACK_SIZE,
+		RunState.backpack.size(), RunState.backpack_cap,
 	])
 	lines.append("hp %d/%d  lv %d (%d/%d xp)" % [
 		RunState.hp, RunState.max_hp, RunState.level,

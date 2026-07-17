@@ -31,6 +31,11 @@ func stream(stream_name: String) -> RandomNumberGenerator:
 	return _streams[stream_name]
 
 
+## 死亡/撤离后重开新局：随机新种子重建全部流。
+func new_run() -> void:
+	start_run(_make_random_seed())
+
+
 func _make_random_seed() -> int:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.randomize()

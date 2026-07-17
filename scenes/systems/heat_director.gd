@@ -72,6 +72,8 @@ func _ready() -> void:
 	heat = float(base)
 	_next_surge_heat = heat + SURGE_HEAT_STEP
 	_player = get_tree().get_first_node_in_group("player") as Player
+	# 精英击杀 10s 安全窗（pressure-design 行为压力，M6 接线）
+	EventBus.elite_killed.connect(func() -> void: pause_spawning(10.0))
 	EventBus.heat_changed.emit(heat)
 
 

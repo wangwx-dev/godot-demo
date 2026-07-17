@@ -8,7 +8,21 @@ extends Node
 const BACKPACK_SIZE: int = 8
 const TOTAL_DAYS: int = 8  ## MVP 预算 8 天，正式版 10（game-design）
 
+## 图型（M6 路线用；ELITE/BATTLE 共用战斗图场景，差异走 is_elite）
+enum MapType { BATTLE, ELITE, REST, SHOP, ASSAULT }
+
+const CANDIDATE_COUNT: int = 2  ## 每天候选数，MVP 固定 2（mapgen-design 待定 3）
+const SHOP_MIN_OFFERS: int = 2  ## 商店候选每局保底（物资唯一变现渠道）
+const SAFE_DROUGHT_LIMIT: int = 3  ## 连续 3 天无休整/商店候选 → 第 4 天必出（合并计算，MVP）
+
 var day: int = 1
+var current_map_type: int = MapType.BATTLE
+var next_candidates: Array[int] = []  ## 本图各载具目的地（=下一天候选）
+var shop_offers: int = 0
+var safe_drought: int = 0
+var rest_reroll_count: int = 0  ## 休整图重随全局累计计价（economy-design，与弹窗内重随分开）
+var backpack_cap: int = BACKPACK_SIZE
+var backpack_expanded: bool = false  ## 扩容每局限 1（休整/商店共享，economy-design）
 var gold: int = 0
 var backpack: Array[LootData] = []
 var upgrades: Dictionary = {}  ## UpgradeData → 已拿层数
@@ -23,6 +37,13 @@ var xp: int = 0
 
 func reset() -> void:
 	day = 1
+	current_map_type = MapType.BATTLE
+	next_candidates = []
+	shop_offers = 0
+	safe_drought = 0
+	rest_reroll_count = 0
+	backpack_cap = BACKPACK_SIZE
+	backpack_expanded = false
 	gold = 0
 	backpack.clear()
 	upgrades.clear()
@@ -109,7 +130,7 @@ func interval_multiplier() -> float:
 
 ## 满包返回 false，由上层弹替换界面（economy-design 满包微决策）。
 func try_add_loot(item: LootData) -> bool:
-	if backpack.size() >= BACKPACK_SIZE:
+	if backpack.size() >= backpack_cap:
 		return false
 	backpack.append(item)
 	EventBus.backpack_changed.emit()
@@ -132,3 +153,70 @@ func redeem_backpack() -> Array[LootData]:
 func advance_day() -> void:
 	day += 1
 	EventBus.day_advanced.emit(day)
+
+
+## ---- 路线（M6，mapgen-design 线性日历式） ----
+
+## 生成下一天候选并缓存（进图时调用一次，载具按此挂目的地牌）。
+## 权重 55/15/15/15、精英第 3 天入池、同天去重、安全图保底、商店每局 ≥2；
+## 精英每局保底次数为待定项（mapgen-design 待定 4），MVP 只走权重。
+func roll_candidates() -> Array[int]:
+	if not next_candidates.is_empty():
+		return next_candidates
+	var next_day: int = day + 1
+	if next_day > TOTAL_DAYS:
+		# 天数耗尽：所有出口都开往总攻（game-design：第 8 天结束强制总攻）
+		next_candidates = [MapType.ASSAULT, MapType.ASSAULT]
+		return next_candidates
+	var rng: RandomNumberGenerator = RunRng.stream("route")
+	var picks: Array[int] = []
+	for i in CANDIDATE_COUNT:
+		picks.append(_roll_type(rng, next_day))
+	# 同天去重优先：全同类型强制替换一个（全是战斗图的"选择"不是选择）
+	if picks[0] == picks[1]:
+		var replacement: int = picks[0]
+		for attempt in 8:
+			replacement = _roll_type(rng, next_day)
+			if replacement != picks[0]:
+				break
+		if replacement == picks[0]:
+			# 8 次没抽出异类型（≈0.7⁸）：硬替换成休整/商店二选一
+			replacement = MapType.REST if rng.randf() < 0.5 else MapType.SHOP
+		picks[1] = replacement
+	# 商店保底：剩余生成轮次不够补足 2 次 → 强制塞一个商店候选
+	var rounds_left: int = TOTAL_DAYS - day  # 含本轮
+	if MapType.SHOP not in picks and shop_offers < SHOP_MIN_OFFERS 			and rounds_left <= SHOP_MIN_OFFERS - shop_offers:
+		picks[1] = MapType.SHOP
+	# 安全图保底：干旱 3 天必出 1 个（休整/商店合并计）
+	if safe_drought >= SAFE_DROUGHT_LIMIT 			and MapType.REST not in picks and MapType.SHOP not in picks:
+		picks[1] = MapType.REST if rng.randf() < 0.5 else MapType.SHOP
+	# 记账
+	if MapType.SHOP in picks:
+		shop_offers += 1
+	if MapType.REST in picks or MapType.SHOP in picks:
+		safe_drought = 0
+	else:
+		safe_drought += 1
+	next_candidates = picks
+	return next_candidates
+
+
+## 单个候选类型：战斗 55/休整 15/商店 15/精英 15（精英第 3 天起入池，此前权重并回战斗）。
+func _roll_type(rng: RandomNumberGenerator, next_day: int) -> int:
+	var roll: float = rng.randf()
+	var elite_open: bool = next_day >= 3
+	if roll < 0.15:
+		return MapType.REST
+	if roll < 0.30:
+		return MapType.SHOP
+	if roll < 0.45 and elite_open:
+		return MapType.ELITE
+	return MapType.BATTLE
+
+
+## 上车出发：定型下一图、清候选、天数 +1（进任何一张图消耗 1 天，总攻不计天）。
+func depart(destination: int) -> void:
+	current_map_type = destination
+	next_candidates = []
+	if destination != MapType.ASSAULT:
+		advance_day()

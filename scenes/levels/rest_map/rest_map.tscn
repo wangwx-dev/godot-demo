@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://dtom1igwtlc7"]
+
+[ext_resource type="Script" path="res://scenes/levels/rest_map/rest_map.gd" id="1_rest"]
+[ext_resource type="PackedScene" uid="uid://dy2dml81mr04p" path="res://scenes/entities/player/player.tscn" id="2_player"]
+
+[node name="RestMap" type="Node2D"]
+script = ExtResource("1_rest")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(180, 360)

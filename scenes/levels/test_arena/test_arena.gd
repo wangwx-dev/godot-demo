@@ -1,7 +1,7 @@
 extends Node2D
-## M5 迷雾+地图拼装实测图：2×2 模块拼接 + 战争迷雾 + 迷你图 + 资源点插槽承接。
-## 验收（mvp-plan M5）：连玩 3 局是否感觉地图"不一样"？
-## Tab 切主武器、F4 快进死线（Debug）、死亡后 R 重开（重开会换新种子=新地图）。
+## 战斗图（M6 起兼精英图）：模块拼装 + 迷雾 + 资源点 + 载具出口 + 词缀精英。
+## 验收（mvp-plan M6）：两辆载具目的地不同时会纠结吗？会在"还剩几天"层面做规划吗？
+## Tab 切主武器、F4 快进死线（Debug）、死亡后 R 开新局（新种子）。
 
 const MAP_SIZE: float = 2560.0
 const MODULE_SIZE: float = 1280.0
@@ -10,12 +10,22 @@ const BAT_DATA: WeaponData = preload("res://resources/weapons/weapon_bat.tres")
 const PISTOL_DATA: WeaponData = preload("res://resources/weapons/weapon_pistol.tres")
 const MOLOTOV_DATA: WeaponData = preload("res://resources/weapons/weapon_molotov.tres")
 const PICKUP_SCENE: PackedScene = preload("res://scenes/entities/pickups/pickup.tscn")
+const ELITE_SCENE: PackedScene = preload("res://scenes/entities/enemies/enemy_elite.tscn")
+const WALKER_DATA: EnemyData = preload("res://resources/enemies/enemy_walker.tres")
+const RUNNER_DATA: EnemyData = preload("res://resources/enemies/enemy_runner.tres")
+
+const VEHICLE_MIN_SPAWN_DIST: float = 1200.0  ## 载具距投放点（不能落地就看见出口）
+const VEHICLE_MIN_GAP: float = 1000.0  ## 载具两两间距（找到一辆≠找到全部）
+const ROAM_ELITE_CHANCE: float = 0.15  ## 普通图游荡精英概率（enemy-design 待定）
+const REINFORCE_TIME: float = 150.0  ## 精英图死线过半增援（2:30）
 
 var _current_weapon: WeaponBase
 var _director: HeatDirector
 var _death_layer: CanvasLayer
 var _assembler: MapAssembler
 var _fog: FogOverlay
+var _is_elite_map: bool = false
+var _reinforced: bool = false
 
 @onready var player: Player = $Player
 
@@ -25,6 +35,8 @@ func _ready() -> void:
 	_build_boundary_walls()
 	_assembler = MapAssembler.new()
 	add_child(_assembler)
+	# 拼装器压到最底层：正式素材模块整图铺 tile，不压底会盖住先入树的 Player
+	move_child(_assembler, 0)
 	_assembler.assemble()
 	# 玩家投放：随机投放槽（叙事：从上一辆载具下车，mapgen-design）
 	var spawn_rng: RandomNumberGenerator = RunRng.stream("mapgen")
@@ -34,8 +46,10 @@ func _ready() -> void:
 	pool.scene = PICKUP_SCENE
 	pool.add_to_group("pickup_pool")
 	add_child(pool)
+	_is_elite_map = RunState.current_map_type == RunState.MapType.ELITE
 	_director = HeatDirector.new()
 	_director.map_rect = Rect2(0, 0, MAP_SIZE, MAP_SIZE)
+	_director.is_elite_map = _is_elite_map
 	add_child(_director)
 	var hud: PressureHud = PressureHud.new()
 	add_child(hud)
@@ -56,8 +70,104 @@ func _ready() -> void:
 	var minimap: Minimap = Minimap.new()
 	add_child(minimap)
 	minimap.setup(_fog)
+	_place_vehicles()
+	_place_elites()
 	EventBus.player_died.connect(_on_player_died)
 	queue_redraw()
+
+
+## 精英图死线过半（2:30）增援 1 只 1 词缀精英（enemy-design 精英配置）。
+func _physics_process(_delta: float) -> void:
+	if _is_elite_map and not _reinforced and _director.map_time >= REINFORCE_TIME:
+		_reinforced = true
+		var rng: RandomNumberGenerator = RunRng.stream("enemy")
+		var angle: float = rng.randf_range(0.0, TAU)
+		var pos: Vector2 = player.global_position + Vector2.from_angle(angle) * 700.0
+		pos.x = clampf(pos.x, 100.0, MAP_SIZE - 100.0)
+		pos.y = clampf(pos.y, 100.0, MAP_SIZE - 100.0)
+		var elite: EnemyElite = _make_elite(1, rng)
+		add_child(elite)
+		elite.global_position = pos
+		print("[TestArena] 精英增援抵达")
+
+
+## 载具出口：从模块载具槽取位，距投放点 ≥1200、两两 ≥1000（mapgen-design 摆放约束）；
+## 槽位不满足时逐档放宽——约束是体验目标不是硬校验。
+func _place_vehicles() -> void:
+	var candidates: Array[int] = RunState.roll_candidates()
+	var rng: RandomNumberGenerator = RunRng.stream("mapgen")
+	var slots: Array[Vector2] = _assembler.vehicle_slots.duplicate()
+	for i in range(slots.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var tmp: Vector2 = slots[i]
+		slots[i] = slots[j]
+		slots[j] = tmp
+	var picked: Array[Vector2] = []
+	for relax in [1.0, 0.75, 0.5, 0.0]:
+		picked.clear()
+		for slot in slots:
+			if slot.distance_to(player.position) < VEHICLE_MIN_SPAWN_DIST * relax:
+				continue
+			var too_close: bool = false
+			for other in picked:
+				if slot.distance_to(other) < VEHICLE_MIN_GAP * relax:
+					too_close = true
+					break
+			if not too_close:
+				picked.append(slot)
+			if picked.size() >= candidates.size():
+				break
+		if picked.size() >= candidates.size():
+			break
+	for i in candidates.size():
+		var vehicle: Vehicle = Vehicle.new()
+		vehicle.destination = candidates[i]
+		vehicle.position = picked[i] if i < picked.size() else Vector2(MAP_SIZE - 200, MAP_SIZE - 200)
+		add_child(vehicle)
+
+
+## 精英配置（enemy-design）：精英图 1 只 2 词缀守离出生最远的资源点（高价值把守占位），
+## 旁边多刷 1 个货币箱放大收益；普通图 15% 游荡 1 只 1 词缀（可绕开，打了有赏）。
+func _place_elites() -> void:
+	var rng: RandomNumberGenerator = RunRng.stream("enemy")
+	if _is_elite_map:
+		var guard_target: ResourcePoint = null
+		var best: float = -1.0
+		for node in get_tree().get_nodes_in_group("resource_points"):
+			var point: ResourcePoint = node as ResourcePoint
+			var distance: float = point.position.distance_to(player.position)
+			if distance > best:
+				best = distance
+				guard_target = point
+		if guard_target == null:
+			return
+		var elite: EnemyElite = _make_elite(2, rng)
+		add_child(elite)
+		elite.global_position = guard_target.position + Vector2(60, 0)
+		var bonus: ResourcePoint = ResourcePoint.new()
+		bonus.kind = ResourcePoint.Kind.GOLD
+		bonus.position = guard_target.position + Vector2(-70, 40)
+		add_child(bonus)
+	elif rng.randf() < ROAM_ELITE_CHANCE:
+		var slots: Array[Vector2] = _assembler.supply_slots
+		if slots.is_empty():
+			return
+		var pos: Vector2 = slots[rng.randi_range(0, slots.size() - 1)]
+		if pos.distance_to(player.position) < 600.0:
+			return  # 太近出生点就不放——游荡精英该是"路上撞见"
+		var elite: EnemyElite = _make_elite(1, rng)
+		add_child(elite)
+		elite.global_position = pos
+		print("[TestArena] 本图有游荡精英")
+
+
+func _make_elite(affix_count: int, rng: RandomNumberGenerator) -> EnemyElite:
+	var elite: EnemyElite = ELITE_SCENE.instantiate()
+	elite.data = WALKER_DATA if rng.randf() < 0.6 else RUNNER_DATA
+	var pool: Array[int] = [EnemyElite.Affix.FRENZY, EnemyElite.Affix.SUMMON, EnemyElite.Affix.TOUGH]
+	for i in affix_count:
+		elite.affixes.append(pool.pop_at(rng.randi_range(0, pool.size() - 1)))
+	return elite
 
 
 ## 按战斗图分布表从模块插槽取位（economy-design 分布 × mapgen-design 插槽承接）。
@@ -124,10 +234,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			if OS.is_debug_build():
 				_director.map_time = HeatDirector.DEADLINE - 70.0
 		KEY_R:
-			# 死亡后重开一局（临时试玩循环，正式死亡结算归 M7）
+			# 死亡后开新局：新种子+状态清零（临时试玩循环，正式死亡结算归 M7）
 			if _death_layer != null:
-				RunState.reset()
-				get_tree().reload_current_scene()
+				MapFlow.restart_run(get_tree())
 
 
 func _equip(weapon_data: WeaponData) -> void:
