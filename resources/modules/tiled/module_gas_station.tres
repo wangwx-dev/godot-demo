@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MapModuleData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/modules/tiled/module_gas_station.tscn" id="1_m2wil"]
+[ext_resource type="Script" path="res://resources/map_module_data.gd" id="2_vw2ft"]
+
+[resource]
+script = ExtResource("2_vw2ft")
+display_name = "废弃加油站"
+theme_name = "gas_station"
+scene = ExtResource("1_m2wil")

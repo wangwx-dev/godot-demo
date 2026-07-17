@@ -68,6 +68,22 @@ godot-demo/
 - **godot MCP**（`.mcp.json`，@coding-solo/godot-mcp）：可启动编辑器、运行项目、抓取调试输出，GODOT_PATH 已指向 4.7 命令行版
 - **context7 MCP**：Godot 4.7 官方文档查询，库 ID `/websites/godotengine_en_4_7`，写 GDScript 前先查 API 避免 3.x/4.x 混淆
 
+## 地图素材管线
+
+正式地图素材来自 `D:\personal\game-assets\sprites\zombie_apocalypse_tileset\`（Ittai Manero，可商用不可再分发，credits 需署名）。重建流程：
+
+```powershell
+# 1. 从素材库导入：拼 32px 图集 + props（2x 最近邻放大，不改像素内容）
+powershell -ExecutionPolicy Bypass -File tools/import_environment_assets.ps1
+# 2. 生成 TileSet 资源 + 烘焙 6 个主题模块场景（scenes/levels/modules/tiled/）
+& "D:\personal\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe" --headless --path D:\personal\godot-demo --import
+& "D:\personal\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe" --headless --path D:\personal\godot-demo --script res://tools/build_map_assets.gd
+# 3. 视觉 QA：渲染模块与拼接预览到 tools/previews/
+& "D:\personal\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe" --path D:\personal\godot-demo --script res://tools/render_map_previews.gd
+```
+
+模块布局在 `tools/build_map_assets.gd` 里手工编排（改完重跑第 2 步）；烘焙出的 .tscn 也可在编辑器直接手调（但会被重跑覆盖，二选一）。`tools/contact_sheets/` 是素材识别用的带编号目录图（`make_contact_sheets.ps1` 生成）。游戏内无人值守截图：`-- --shot=N`（第 N 帧存 tools/previews/ingame_view.png 后退出）。
+
 ## 参考
 
 - **核心玩法设计见 `docs/game-design.md`**——做功能前先对照设计支柱和 MVP 范围；子系统设计（武器等）在 docs/ 下各自成文

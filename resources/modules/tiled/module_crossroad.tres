@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MapModuleData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/modules/tiled/module_crossroad.tscn" id="1_2jw60"]
+[ext_resource type="Script" path="res://resources/map_module_data.gd" id="2_rw4f2"]
+
+[resource]
+script = ExtResource("2_rw4f2")
+display_name = "十字路口"
+theme_name = "crossroad"
+scene = ExtResource("1_2jw60")

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MapModuleData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/modules/tiled/module_town.tscn" id="1_48ee3"]
+[ext_resource type="Script" path="res://resources/map_module_data.gd" id="2_xj4td"]
+
+[resource]
+script = ExtResource("2_xj4td")
+display_name = "街区"
+theme_name = "town"
+scene = ExtResource("1_48ee3")

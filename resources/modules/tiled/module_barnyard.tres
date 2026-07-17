@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MapModuleData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/modules/tiled/module_barnyard.tscn" id="1_fqixi"]
+[ext_resource type="Script" path="res://resources/map_module_data.gd" id="2_vbn8j"]
+
+[resource]
+script = ExtResource("2_vbn8j")
+display_name = "谷仓院"
+theme_name = "barnyard"
+scene = ExtResource("1_fqixi")

@@ -15,6 +15,9 @@ var spawn_slots: Array[Vector2] = []        ## 玩家投放槽 ×1
 
 var theme_name: String = ""
 
+## 是否参与拼接器的 90° 旋转变体（正式素材模块因建筑立面朝向关掉）
+var rotatable: bool = true
+
 
 func _ready() -> void:
 	_setup()

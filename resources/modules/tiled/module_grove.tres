@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MapModuleData" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/modules/tiled/module_grove.tscn" id="1_58l2e"]
+[ext_resource type="Script" path="res://resources/map_module_data.gd" id="2_1he8d"]
+
+[resource]
+script = ExtResource("2_1he8d")
+display_name = "林间墓园"
+theme_name = "grove"
+scene = ExtResource("1_58l2e")
