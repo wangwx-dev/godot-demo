@@ -18,6 +18,7 @@ var _director: HeatDirector
 
 func _ready() -> void:
 	player.set_camera_limits(Rect2(0, 0, MAP_SIZE, MAP_SIZE))
+	_build_boundary_walls()
 	var pool: ObjectPool = ObjectPool.new()
 	pool.scene = PICKUP_SCENE
 	pool.add_to_group("pickup_pool")
@@ -56,6 +57,29 @@ func _equip(weapon_data: WeaponData) -> void:
 	_current_weapon.data = weapon_data
 	player.add_child(_current_weapon)
 	print("[TestArena] 武器: %s" % weapon_data.display_name)
+
+
+## 图边界物理墙（层 1）：玩家和敌人都撞得住，红框只是它的可视化。
+func _build_boundary_walls() -> void:
+	var walls: StaticBody2D = StaticBody2D.new()
+	walls.collision_layer = 1
+	walls.collision_mask = 0
+	var half: float = MAP_SIZE / 2.0
+	var thickness: float = 60.0
+	var specs: Array = [
+		[Vector2(half, -thickness / 2.0), Vector2(MAP_SIZE + thickness * 2.0, thickness)],
+		[Vector2(half, MAP_SIZE + thickness / 2.0), Vector2(MAP_SIZE + thickness * 2.0, thickness)],
+		[Vector2(-thickness / 2.0, half), Vector2(thickness, MAP_SIZE + thickness * 2.0)],
+		[Vector2(MAP_SIZE + thickness / 2.0, half), Vector2(thickness, MAP_SIZE + thickness * 2.0)],
+	]
+	for spec in specs:
+		var shape_node: CollisionShape2D = CollisionShape2D.new()
+		var shape: RectangleShape2D = RectangleShape2D.new()
+		shape.size = spec[1]
+		shape_node.shape = shape
+		shape_node.position = spec[0]
+		walls.add_child(shape_node)
+	add_child(walls)
 
 
 func _draw() -> void:

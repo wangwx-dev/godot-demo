@@ -16,6 +16,7 @@ var _last_countdown_second: int = -1
 
 var _heat_label: Label
 var _time_label: Label
+var _surge_label: Label
 var _glow: Control
 var _audio: AudioStreamPlayer
 
@@ -41,6 +42,13 @@ func _ready() -> void:
 	_time_label = Label.new()
 	_time_label.add_theme_font_size_override("font_size", 30)
 	box.add_child(_time_label)
+	_surge_label = Label.new()
+	_surge_label.add_theme_font_size_override("font_size", 42)
+	_surge_label.add_theme_color_override("font_color", Color(1.0, 0.25, 0.15))
+	_surge_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_surge_label.position = Vector2(-130, 120)
+	_surge_label.visible = false
+	add_child(_surge_label)
 	_audio = AudioStreamPlayer.new()
 	add_child(_audio)
 
@@ -78,27 +86,50 @@ func _process(delta: float) -> void:
 		if left <= 10.0 and floori(left) != _last_countdown_second:
 			_last_countdown_second = floori(left)
 			_play(TICK, 0.0)
-	# 涌潮红光淡出
+	# 涌潮红光淡出 + 崩溃常驻红晕
 	if _surge_glow_timer > 0.0:
 		_surge_glow_timer -= delta
+		if _surge_glow_timer <= 0.0:
+			_surge_label.visible = false
+		_glow.queue_redraw()
+	elif director.collapse:
 		_glow.queue_redraw()
 
 
 func _on_surge_incoming(direction: Vector2) -> void:
 	_surge_direction = direction
 	_surge_glow_timer = HeatDirector.SURGE_WARNING_DURATION
-	_play(GROWL, 0.0)
+	_surge_label.text = "尸潮来袭 %s" % _direction_name(direction)
+	_surge_label.visible = true
+	_play(GROWL, 3.0)
 
 
-## 涌潮来向的屏幕边缘红色渐变条（正式 shader 版归 M7）。
+func _direction_name(direction: Vector2) -> String:
+	if absf(direction.x) >= absf(direction.y):
+		return "→ 右侧" if direction.x > 0.0 else "← 左侧"
+	return "↓ 下方" if direction.y > 0.0 else "↑ 上方"
+
+
+## 涌潮来向的屏幕边缘红色渐变条 + 崩溃常驻红晕（正式 shader 版归 M7）。
 func _draw_glow() -> void:
+	var size: Vector2 = _glow.size
+	# 崩溃期：四边常驻深红呼吸晕——整个屏幕都在告诉你"该跑了"
+	if director != null and is_instance_valid(director) and director.collapse:
+		var pulse: float = 0.30 + 0.12 * sin(Time.get_ticks_msec() / 350.0)
+		var edge_color: Color = Color(0.7, 0.05, 0.05, pulse)
+		var edge_fade: Color = Color(0.7, 0.05, 0.05, 0.0)
+		var edge: float = 140.0
+		_draw_gradient_rect(Rect2(0, 0, edge, size.y), edge_color, edge_fade, true)
+		_draw_gradient_rect(Rect2(size.x - edge, 0, edge, size.y), edge_fade, edge_color, true)
+		_draw_gradient_rect(Rect2(0, 0, size.x, edge), edge_color, edge_fade, false)
+		_draw_gradient_rect(Rect2(0, size.y - edge, size.x, edge), edge_fade, edge_color, false)
 	if _surge_glow_timer <= 0.0:
 		return
-	var size: Vector2 = _glow.size
-	var alpha: float = 0.55 * (0.6 + 0.4 * sin(_surge_glow_timer * 12.0))  # 脉动
-	var thickness: float = 90.0
-	var color: Color = Color(0.9, 0.15, 0.1, alpha)
-	var fade: Color = Color(0.9, 0.15, 0.1, 0.0)
+	# 涌潮预警：加宽加亮 + 快脉动
+	var alpha: float = 0.85 * (0.55 + 0.45 * sin(_surge_glow_timer * 14.0))
+	var thickness: float = 260.0
+	var color: Color = Color(1.0, 0.1, 0.05, alpha)
+	var fade: Color = Color(1.0, 0.1, 0.05, 0.0)
 	# 主导轴决定哪条边亮
 	if absf(_surge_direction.x) >= absf(_surge_direction.y):
 		if _surge_direction.x > 0.0:

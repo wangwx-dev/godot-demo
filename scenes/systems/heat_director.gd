@@ -26,11 +26,12 @@ const FLOW_TABLE: Array = [
 const SURGE_WARNING_DURATION: float = 3.0
 const SURGE_HEAT_STEP: float = 2.0
 
-const COLLAPSE_START_INTERVAL: float = 0.5
-const COLLAPSE_INTERVAL_HALVING: float = 15.0
-const COLLAPSE_SCREEN_CAP: int = 80
-const COLLAPSE_STACK_TIME: float = 30.0
-const COLLAPSE_HP_PER_STACK: float = 0.5
+const COLLAPSE_START_INTERVAL: float = 0.3
+const COLLAPSE_INTERVAL_HALVING: float = 10.0
+const COLLAPSE_SCREEN_CAP: int = 120
+const COLLAPSE_BURST: int = 2  ## 崩溃期每次刷入只数
+const COLLAPSE_STACK_TIME: float = 15.0
+const COLLAPSE_HP_PER_STACK: float = 1.0
 const COLLAPSE_SPEED_PER_STACK: float = 0.2
 const COLLAPSE_SPEED_CAP: float = 200.0
 const COLLAPSE_SPECIAL_RATIO: float = 0.35
@@ -143,7 +144,9 @@ func _update_flow(delta: float) -> void:
 	_spawn_timer = _current_interval()
 	if Debug.enemy_count >= _screen_cap():
 		return  # 达上限暂停刷入，不销毁远处敌人（待定 2）
-	_spawn_one(_random_ring_position())
+	var burst: int = COLLAPSE_BURST if collapse else 1
+	for i in burst:
+		_spawn_one(_random_ring_position())
 
 
 func _update_surge(delta: float) -> void:
