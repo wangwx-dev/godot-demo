@@ -1,7 +1,7 @@
 class_name Player
 extends CharacterBody2D
 ## 俯视角八方向移动的玩家控制器 + M1 战斗侧：受击/无敌/翻滚/死亡。
-## 基础数值为 upgrade-design 锚点（220 移速/40 拾取/0.5s 受击无敌/翻滚 3s 冷却 160px 0.3s 无敌）。
+## 基础数值为 upgrade-design 锚点（220 移速/40 拾取/0.5s 受击无敌/翻滚 3s 冷却 120px 0.3s 无敌）。
 ## 血量记账在 RunState（跨图持续），本类只管判定与表现。
 
 @export var max_speed: float = 220.0
@@ -11,7 +11,7 @@ extends CharacterBody2D
 @export var pickup_radius: float = 40.0
 
 @export var dodge_cooldown: float = 3.0
-@export var dodge_distance: float = 160.0
+@export var dodge_distance: float = 120.0
 @export var dodge_invuln: float = 0.3
 const DODGE_DURATION: float = 0.15
 

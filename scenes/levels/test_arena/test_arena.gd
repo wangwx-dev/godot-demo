@@ -100,7 +100,7 @@ func _draw() -> void:
 		draw_line(Vector2(0, offset), Vector2(MAP_SIZE, offset), Color(0.3, 0.3, 0.28), 4.0)
 	# 图边界
 	draw_rect(Rect2(0, 0, MAP_SIZE, MAP_SIZE), Color(0.6, 0.3, 0.25), false, 8.0)
-	# 100px 刻度点（距离体感参照：奔跑者钻出距离/翻滚 160px 等都以它读）
+	# 100px 刻度点（距离体感参照：奔跑者钻出距离/翻滚 120px 等都以它读）
 	for x in range(0, int(MAP_SIZE) + 1, 100):
 		for y in range(0, int(MAP_SIZE) + 1, 100):
 			draw_circle(Vector2(x, y), 2.0, Color(0.22, 0.23, 0.21))
