@@ -14,6 +14,12 @@ const KNOCKBACK_FRICTION: float = 800.0
 
 @export var data: EnemyData
 
+## 崩溃期叠层接口（pressure-design 死线）：刷入前由 HeatDirector 设置。
+var hp_multiplier: float = 1.0
+var speed_multiplier: float = 1.0
+## 全体移速硬顶（崩溃期 200 < 玩家 220，"赶你走不是处刑"）。INF = 无顶。
+var speed_cap: float = INF
+
 var state: State = State.SPAWN
 var hp: int = 0
 var knockback_velocity: Vector2 = Vector2.ZERO
@@ -29,7 +35,7 @@ var _player: Player
 
 func _ready() -> void:
 	add_to_group("enemies")
-	hp = data.max_hp
+	hp = roundi(data.max_hp * hp_multiplier)
 	body_polygon.color = data.outline_color
 	body_polygon.scale = Vector2.ONE * data.sprite_scale
 	# 缩放碰撞半径而非物理体节点（缩放物理体是 Godot 反模式）
@@ -70,9 +76,10 @@ func _chase(delta: float) -> void:
 		_player = get_tree().get_first_node_in_group("player") as Player
 		return
 	var to_player: Vector2 = _player.global_position - global_position
-	var desired: Vector2 = to_player.normalized() * data.speed + _separation()
+	var effective_speed: float = minf(data.speed * speed_multiplier, speed_cap)
+	var desired: Vector2 = to_player.normalized() * effective_speed + _separation()
 	knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, KNOCKBACK_FRICTION * delta)
-	velocity = desired.limit_length(data.speed) + knockback_velocity
+	velocity = desired.limit_length(effective_speed) + knockback_velocity
 	move_and_slide()
 	# 接触攻击：贴身 + 自身攻击间隔到点（玩家侧另有 0.5s 受击无敌封顶）
 	_damage_timer -= delta

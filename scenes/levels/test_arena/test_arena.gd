@@ -1,32 +1,17 @@
 extends Node2D
-## M1 战斗实测图：2560×2560 + 简易刷怪器 + 武器装配 + 拾取物池。
-## 正式刷怪节奏归 M2 HeatDirector，这里只用固定间隔喂验收问题：
-## 奔跑者紧张吗？臃肿者改打法吗？球棒/手枪是两种游戏吗？（Tab 切换武器）
+## M2 压力曲线实测图：2560×2560 + HeatDirector 正式刷怪 + 临时压力 HUD。
+## 验收（mvp-plan M2）：涌潮预警响起时行为是否改变？被崩溃淹没是否明白"是自己贪了"？
+## Tab 切武器（M1 遗留验收用）；F4 快进死线（Debug）。
 
 const MAP_SIZE: float = 2560.0
 const MODULE_SIZE: float = 1280.0
 
-const WALKER_INTERVAL: float = 1.2
-const RUNNER_INTERVAL: float = 9.0
-const BLOATER_INTERVAL: float = 14.0
-const SPAWN_DISTANCE_MIN: float = 700.0
-const SPAWN_DISTANCE_MAX: float = 900.0
-
-const ENEMY_SCENE: PackedScene = preload("res://scenes/entities/enemies/enemy_base.tscn")
-const BLOATER_SCENE: PackedScene = preload("res://scenes/entities/enemies/enemy_bloater.tscn")
-const PICKUP_SCENE: PackedScene = preload("res://scenes/entities/pickups/pickup.tscn")
-
-const WALKER_DATA: EnemyData = preload("res://resources/enemies/enemy_walker.tres")
-const RUNNER_DATA: EnemyData = preload("res://resources/enemies/enemy_runner.tres")
-const BLOATER_DATA: EnemyData = preload("res://resources/enemies/enemy_bloater.tres")
-
 const BAT_DATA: WeaponData = preload("res://resources/weapons/weapon_bat.tres")
 const PISTOL_DATA: WeaponData = preload("res://resources/weapons/weapon_pistol.tres")
+const PICKUP_SCENE: PackedScene = preload("res://scenes/entities/pickups/pickup.tscn")
 
-var _walker_timer: float = 0.0
-var _runner_timer: float = 4.0
-var _bloater_timer: float = 8.0
 var _current_weapon: WeaponBase
+var _director: HeatDirector
 
 @onready var player: Player = $Player
 
@@ -37,6 +22,12 @@ func _ready() -> void:
 	pool.scene = PICKUP_SCENE
 	pool.add_to_group("pickup_pool")
 	add_child(pool)
+	_director = HeatDirector.new()
+	_director.map_rect = Rect2(0, 0, MAP_SIZE, MAP_SIZE)
+	add_child(_director)
+	var hud: PressureHud = PressureHud.new()
+	add_child(hud)
+	hud.setup(_director)
 	_equip(PISTOL_DATA)
 	queue_redraw()
 
@@ -45,9 +36,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	var key_event: InputEventKey = event as InputEventKey
 	if key_event == null or not key_event.pressed or key_event.echo:
 		return
-	# Tab 切换球棒/手枪——M1 验收"两种游戏"专用，正式版起始二选一
-	if key_event.physical_keycode == KEY_TAB:
-		_equip(BAT_DATA if _current_weapon.data == PISTOL_DATA else PISTOL_DATA)
+	match key_event.physical_keycode:
+		KEY_TAB:
+			# 切换球棒/手枪——验收对照用，正式版起始二选一
+			_equip(BAT_DATA if _current_weapon.data == PISTOL_DATA else PISTOL_DATA)
+		KEY_F4:
+			# 快进到死线前 70s，验证最后 60s 警告 + 崩溃（Debug 门控）
+			if OS.is_debug_build():
+				_director.map_time = HeatDirector.DEADLINE - 70.0
 
 
 func _equip(weapon_data: WeaponData) -> void:
@@ -60,34 +56,6 @@ func _equip(weapon_data: WeaponData) -> void:
 	_current_weapon.data = weapon_data
 	player.add_child(_current_weapon)
 	print("[TestArena] 武器: %s" % weapon_data.display_name)
-
-
-func _physics_process(delta: float) -> void:
-	_walker_timer -= delta
-	_runner_timer -= delta
-	_bloater_timer -= delta
-	if _walker_timer <= 0.0:
-		_walker_timer = WALKER_INTERVAL
-		_spawn(ENEMY_SCENE, WALKER_DATA)
-	if _runner_timer <= 0.0:
-		_runner_timer = RUNNER_INTERVAL
-		_spawn(ENEMY_SCENE, RUNNER_DATA)
-	if _bloater_timer <= 0.0:
-		_bloater_timer = BLOATER_INTERVAL
-		_spawn(BLOATER_SCENE, BLOATER_DATA)
-
-
-func _spawn(scene: PackedScene, data: EnemyData) -> void:
-	var rng: RandomNumberGenerator = RunRng.stream("enemy")
-	var angle: float = rng.randf_range(0.0, TAU)
-	var distance: float = rng.randf_range(SPAWN_DISTANCE_MIN, SPAWN_DISTANCE_MAX)
-	var pos: Vector2 = player.global_position + Vector2.from_angle(angle) * distance
-	pos.x = clampf(pos.x, 40.0, MAP_SIZE - 40.0)
-	pos.y = clampf(pos.y, 40.0, MAP_SIZE - 40.0)
-	var enemy: EnemyBase = scene.instantiate()
-	enemy.data = data
-	add_child(enemy)
-	enemy.global_position = pos
 
 
 func _draw() -> void:
