@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3 uid="uid://cupg2rng03cc"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "扩展"
+description = "攻击范围 +12%"
+rarity = 0
+effect = 2
+effect_value = 0.12
+max_stacks = 3

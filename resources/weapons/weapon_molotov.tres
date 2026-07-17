@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://cwep2dat03mol"]
+
+[ext_resource type="Script" path="res://resources/weapon_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "燃烧瓶"
+slot = 1
+damage = 12
+interval = 18.0
+attack_range = 450.0
+geometry = 2
+geometry_params = {
+"cluster_radius": 120.0,
+"cluster_min": 4,
+"fire_radius": 100.0,
+"fire_duration": 4.0
+}
+knockback = 0.0
+level_effects = [{
+"radius_add": 40.0
+}, {
+"duration_add": 2.0
+}]

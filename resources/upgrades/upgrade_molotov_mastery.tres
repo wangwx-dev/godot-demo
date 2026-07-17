@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=3 format=3 uid="uid://cupgamol11kk"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+[ext_resource type="Resource" uid="uid://cwep2dat03mol" path="res://resources/weapons/weapon_molotov.tres" id="2_molotov"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "燃烧瓶精通"
+description = "燃烧瓶专属强化（顺序解锁）"
+rarity = 1
+effect = 8
+effect_value = 0.0
+max_stacks = 2
+weapon_ref = ExtResource("2_molotov")
+level_names = PackedStringArray("助燃剂", "粘稠配方")
+level_descs = PackedStringArray("火焰区域半径 +40px", "火焰持续 +2s")

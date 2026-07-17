@@ -1,13 +1,14 @@
 extends Node2D
-## M2 压力曲线实测图：2560×2560 + HeatDirector 正式刷怪 + 临时压力 HUD。
-## 验收（mvp-plan M2）：涌潮预警响起时行为是否改变？被崩溃淹没是否明白"是自己贪了"？
-## Tab 切武器（M1 遗留验收用）；F4 快进死线（Debug）。
+## M3 升级三选一实测图：HeatDirector 刷怪 + 主武器（Tab 切）+ 燃烧瓶副武器 + 三选一弹窗。
+## 验收（mvp-plan M3）：白卡 1 层"有感觉"、3 层"明显变强"？
+## F4 快进死线（Debug）。
 
 const MAP_SIZE: float = 2560.0
 const MODULE_SIZE: float = 1280.0
 
 const BAT_DATA: WeaponData = preload("res://resources/weapons/weapon_bat.tres")
 const PISTOL_DATA: WeaponData = preload("res://resources/weapons/weapon_pistol.tres")
+const MOLOTOV_DATA: WeaponData = preload("res://resources/weapons/weapon_molotov.tres")
 const PICKUP_SCENE: PackedScene = preload("res://scenes/entities/pickups/pickup.tscn")
 
 var _current_weapon: WeaponBase
@@ -30,6 +31,11 @@ func _ready() -> void:
 	add_child(hud)
 	hud.setup(_director)
 	_equip(PISTOL_DATA)
+	# 副武器：燃烧瓶直接挂上（正式版进图搜/商店买，M4+；M3 先验证自动释放与强化）
+	var molotov: WeaponArea = WeaponArea.new()
+	molotov.data = MOLOTOV_DATA
+	player.add_child(molotov)
+	add_child(LevelUpMenu.new())
 	queue_redraw()
 
 

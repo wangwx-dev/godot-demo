@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=3 format=3 uid="uid://cupg9pis10jj"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+[ext_resource type="Resource" uid="uid://cwep1dat02pis" path="res://resources/weapons/weapon_pistol.tres" id="2_pistol"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "手枪精通"
+description = "手枪专属强化（顺序解锁）"
+rarity = 1
+effect = 8
+effect_value = 0.0
+max_stacks = 3
+weapon_ref = ExtResource("2_pistol")
+level_names = PackedStringArray("空尖弹", "快速击锤", "穿透弹")
+level_descs = PackedStringArray("手枪伤害 +5（2 发杀普通尸）", "攻击间隔 -0.15s", "子弹贯穿 +1")

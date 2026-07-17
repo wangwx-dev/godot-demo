@@ -28,6 +28,19 @@ func _ready() -> void:
 	add_to_group("player")
 
 
+## 强化聚合后的实效属性（每帧读，叠层即时生效）。
+func effective_speed() -> float:
+	return max_speed * (1.0 + RunState.stat_sum(UpgradeData.Effect.MOVE_SPEED_MULT))
+
+
+func effective_pickup_radius() -> float:
+	return pickup_radius * (1.0 + RunState.stat_sum(UpgradeData.Effect.PICKUP_RADIUS_MULT))
+
+
+func effective_dodge_cooldown() -> float:
+	return maxf(dodge_cooldown + RunState.stat_sum(UpgradeData.Effect.SKILL_COOLDOWN_ADD), 0.5)
+
+
 func _physics_process(delta: float) -> void:
 	if _dead:
 		return
@@ -44,7 +57,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if Input.is_action_just_pressed("dodge") and _dodge_cooldown_timer <= 0.0 and input_dir != Vector2.ZERO:
-		_dodge_cooldown_timer = dodge_cooldown
+		_dodge_cooldown_timer = effective_dodge_cooldown()
 		_dodge_timer = DODGE_DURATION
 		_hit_invuln_timer = maxf(_hit_invuln_timer, dodge_invuln)
 		_dodge_velocity = input_dir.normalized() * (dodge_distance / DODGE_DURATION)
@@ -53,7 +66,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if input_dir != Vector2.ZERO:
-		velocity = velocity.move_toward(input_dir * max_speed, acceleration * delta)
+		velocity = velocity.move_toward(input_dir * effective_speed(), acceleration * delta)
 	else:
 		velocity = velocity.move_toward(Vector2.ZERO, friction * delta)
 

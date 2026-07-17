@@ -17,8 +17,8 @@ func _try_attack() -> bool:
 	bullet.launch(
 		(target.global_position - global_position).normalized(),
 		data.geometry_params.get("bullet_speed", 600.0),
-		data.damage,
-		data.geometry_params.get("pierce", 0),
-		data.attack_range
+		effective_damage(),
+		int(data.geometry_params.get("pierce", 0) + _level_sum("pierce_add")),
+		effective_range()
 	)
 	return true

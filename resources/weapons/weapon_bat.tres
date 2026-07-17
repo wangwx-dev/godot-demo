@@ -15,3 +15,11 @@ geometry_params = {
 "windup": 0.15
 }
 knockback = 60.0
+level_effects = [{
+"damage_add": 6.0
+}, {
+"arc_add": 60.0,
+"knockback_add": 30.0
+}, {
+"interval_add": -0.25
+}]

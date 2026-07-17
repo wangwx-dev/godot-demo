@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=3 format=3 uid="uid://cupg8bat09ii"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+[ext_resource type="Resource" uid="uid://cwep0dat01bat" path="res://resources/weapons/weapon_bat.tres" id="2_bat"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "球棒精通"
+description = "球棒专属强化（顺序解锁）"
+rarity = 1
+effect = 8
+effect_value = 0.0
+max_stacks = 3
+weapon_ref = ExtResource("2_bat")
+level_names = PackedStringArray("加重钉板", "大力挥击", "连击")
+level_descs = PackedStringArray("球棒伤害 +6", "挥砍弧度 150°→210°，击退 +30px", "攻击间隔 -0.25s")

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3 uid="uid://cupg5pik06ff"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "磁性"
+description = "拾取半径 +25%"
+rarity = 0
+effect = 5
+effect_value = 0.25
+max_stacks = 3

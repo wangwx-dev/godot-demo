@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3 uid="uid://cupg6skl07gg"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "灵活筋骨"
+description = "角色技能冷却 -0.5s"
+rarity = 1
+effect = 6
+effect_value = -0.5
+max_stacks = 2

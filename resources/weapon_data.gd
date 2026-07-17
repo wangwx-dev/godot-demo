@@ -14,3 +14,6 @@ enum Geometry { ARC, LINE, AREA }  ## 弧形挥砍 / 直线弹道 / 区域效果
 @export var geometry_params: Dictionary = {}  ## 如 {"arc_degrees": 150} / {"pierce": 0}
 @export var knockback: float = 0.0
 @export var icon: Texture2D
+## 专属强化逐级效果（Lv2 起，顺序解锁）：[{"damage_add": 6.0}, {"arc_add": 60.0}, ...]
+## 键：damage_add / interval_add / arc_add / knockback_add / pierce_add / radius_add / duration_add
+@export var level_effects: Array = []

@@ -37,7 +37,7 @@ func _physics_process(delta: float) -> void:
 	if distance <= COLLECT_DISTANCE:
 		_collect()
 		return
-	if distance <= _player.pickup_radius:
+	if distance <= _player.effective_pickup_radius():
 		_magnet_speed += MAGNET_ACCEL * delta
 		global_position = global_position.move_toward(_player.global_position, _magnet_speed * delta)
 	else:

@@ -5,8 +5,12 @@ extends WeaponBase
 
 var _swing_direction: Vector2 = Vector2.RIGHT
 var _swing_age: float = 1.0
+var _swing_arc: float = 150.0
+var _swing_range: float = 80.0
 
-@onready var _arc_degrees: float = data.geometry_params.get("arc_degrees", 150.0)
+
+func effective_arc() -> float:
+	return data.geometry_params.get("arc_degrees", 150.0) + _level_sum("arc_add")
 
 
 func _process(delta: float) -> void:
@@ -27,11 +31,15 @@ func _try_attack() -> bool:
 		direction_sum += (enemy.global_position - global_position).normalized()
 	_swing_direction = direction_sum.normalized() if direction_sum.length() > 0.01 \
 			else (targets[0].global_position - global_position).normalized()
-	var half_arc: float = deg_to_rad(_arc_degrees) / 2.0
+	_swing_arc = effective_arc()
+	_swing_range = effective_range()
+	var half_arc: float = deg_to_rad(_swing_arc) / 2.0
+	var damage: int = effective_damage()
+	var knockback: float = effective_knockback()
 	for enemy in targets:
 		var to_enemy: Vector2 = enemy.global_position - global_position
 		if absf(_swing_direction.angle_to(to_enemy)) <= half_arc:
-			enemy.take_damage(data.damage, to_enemy.normalized() * data.knockback * 6.0)
+			enemy.take_damage(damage, to_enemy.normalized() * knockback * 6.0)
 	_swing_age = 0.0
 	queue_redraw()
 	return true
@@ -42,9 +50,9 @@ func _draw() -> void:
 		return
 	var alpha: float = 1.0 - _swing_age / 0.18
 	var base_angle: float = _swing_direction.angle()
-	var half_arc: float = deg_to_rad(_arc_degrees) / 2.0
+	var half_arc: float = deg_to_rad(_swing_arc) / 2.0
 	var points: PackedVector2Array = [Vector2.ZERO]
 	for i in 13:
-		var angle: float = base_angle - half_arc + deg_to_rad(_arc_degrees) * i / 12.0
-		points.append(Vector2.from_angle(angle) * data.attack_range)
+		var angle: float = base_angle - half_arc + deg_to_rad(_swing_arc) * i / 12.0
+		points.append(Vector2.from_angle(angle) * _swing_range)
 	draw_colored_polygon(points, Color(0.9, 0.9, 0.8, 0.35 * alpha))
