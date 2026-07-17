@@ -131,6 +131,7 @@
 - 压力曲线：`docs/pressure-design.md`（v1.2，2026-07-17）
 - 资源点与经济：`docs/economy-design.md`（v1，2026-07-17）
 - 地图生成规则：`docs/mapgen-design.md`（v1，2026-07-17）
+- 信息与 UI：`docs/ui-design.md`（v1，2026-07-17）
 
 ## 待定问题（按解决优先级）
 
