@@ -37,6 +37,7 @@ const KIND_COLORS: Array[Color] = [
 
 var progress: float = 0.0
 var done: bool = false
+var discovered: bool = false  ## 迷雾光圈扫到后置位（FogOverlay），迷你图渲染依据
 
 var _dwelling: bool = false
 var _player: Player

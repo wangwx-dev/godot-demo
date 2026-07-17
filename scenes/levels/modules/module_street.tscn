@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cmod_street01"]
+
+[ext_resource type="Script" path="res://scenes/levels/modules/module_street.gd" id="1"]
+
+[node name="Module" type="Node2D"]
+script = ExtResource("1")

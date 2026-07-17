@@ -5,10 +5,13 @@ extends Node2D
 const HEAL_AMOUNT: int = 15
 const COLLECT_DISTANCE: float = 20.0
 
+var discovered: bool = false
+
 var _player: Player
 
 
 func _ready() -> void:
+	add_to_group("bandages")
 	_player = get_tree().get_first_node_in_group("player") as Player
 
 
