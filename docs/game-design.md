@@ -136,6 +136,8 @@
 - 信息与 UI：`docs/ui-design.md`（v1，2026-07-17）
 - 角色设计：`docs/character-design.md`（v1，2026-07-17）
 - 素材清单：`docs/asset-list.md`（v1，2026-07-17，素材管理以此为准）
+- 技术架构：`docs/tech-design.md`（v1，2026-07-17，相机/Autoload/Resource/场景流转/输入/调试）
+- 实施计划：`docs/mvp-plan.md`（v1，2026-07-17，M0~M8 里程碑与验收）
 
 ## 待定问题（按解决优先级）
 
