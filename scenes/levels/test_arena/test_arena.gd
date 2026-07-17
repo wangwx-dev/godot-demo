@@ -1,7 +1,7 @@
 extends Node2D
-## M3 升级三选一实测图：HeatDirector 刷怪 + 主武器（Tab 切）+ 燃烧瓶副武器 + 三选一弹窗。
-## 验收（mvp-plan M3）：白卡 1 层"有感觉"、3 层"明显变强"？
-## F4 快进死线（Debug）。
+## M4 资源点+经济实测图：HeatDirector 刷怪 + 三选一 + 四种资源点驻留 + 背包/满包替换。
+## 验收（mvp-plan M4）：满包开箱时玩家会犹豫吗？会为省 20 金治疗费冒险吗？
+## Tab 切主武器、F4 快进死线（Debug）、死亡后 R 重开。
 
 const MAP_SIZE: float = 2560.0
 const MODULE_SIZE: float = 1280.0
@@ -37,8 +37,55 @@ func _ready() -> void:
 	molotov.data = MOLOTOV_DATA
 	player.add_child(molotov)
 	add_child(LevelUpMenu.new())
+	add_child(BackpackSwapMenu.new())
+	add_child(EconomyHud.new())
+	_place_resource_points()
 	EventBus.player_died.connect(_on_player_died)
 	queue_redraw()
+
+
+## 按战斗图分布表摆放（economy-design：物资 1~2/货币 0~1/经验矿 1/武器 0~1/绷带 1~2）。
+## 位置走 RunRng "mapgen" 流；正式版由模块插槽承接（M5，mapgen-design）。
+func _place_resource_points() -> void:
+	var rng: RandomNumberGenerator = RunRng.stream("mapgen")
+	var counts: Array = [
+		[ResourcePoint.Kind.SUPPLY, rng.randi_range(1, 2)],
+		[ResourcePoint.Kind.GOLD, rng.randi_range(0, 1)],
+		[ResourcePoint.Kind.XP_MINE, 1],
+		[ResourcePoint.Kind.WEAPON, 1 if rng.randf() < 0.33 else 0],
+	]
+	var margin: float = 200.0
+	for spec in counts:
+		for i in spec[1]:
+			var point: ResourcePoint = ResourcePoint.new()
+			point.kind = spec[0]
+			point.position = _random_spread_position(rng, margin)
+			if spec[0] == ResourcePoint.Kind.WEAPON:
+				point.looted_weapon.connect(_on_weapon_looted)
+			add_child(point)
+	for i in rng.randi_range(1, 2):
+		var bandage: Bandage = Bandage.new()
+		bandage.position = _random_spread_position(rng, margin)
+		add_child(bandage)
+
+
+## 随机点位，避开玩家出生点半径 300（开局脚下就是箱子没有"去搜"的感觉）。
+func _random_spread_position(rng: RandomNumberGenerator, margin: float) -> Vector2:
+	var center: Vector2 = Vector2(MAP_SIZE / 2.0, MAP_SIZE / 2.0)
+	for attempt in 20:
+		var pos: Vector2 = Vector2(
+				rng.randf_range(margin, MAP_SIZE - margin),
+				rng.randf_range(margin, MAP_SIZE - margin))
+		if pos.distance_to(center) > 300.0:
+			return pos
+	return center + Vector2(500, 0)
+
+
+## 武器箱产出：主武器直接换装（简版换装决策；正式对比界面归后续）。
+func _on_weapon_looted(weapon: WeaponData) -> void:
+	print("[TestArena] 武器箱开出: %s" % weapon.display_name)
+	if weapon.slot == WeaponData.Slot.MAIN:
+		_equip(weapon)
 
 
 func _unhandled_input(event: InputEvent) -> void:

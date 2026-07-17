@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="LootData" load_steps=2 format=3 uid="uid://cloot0dat01can"]
+
+[ext_resource type="Script" path="res://resources/loot_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "罐头"
+tier = 0
+value = 10

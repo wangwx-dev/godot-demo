@@ -52,7 +52,7 @@ var heat: float = 0.0
 var map_time: float = 0.0
 var collapse: bool = false
 ## 行为压力开关：资源点驻留时置 true，刷入间隔减半（M4 接线）
-var loot_pressure: bool = false
+var loot_pressure: bool = false  ## 驻留刷入减半（M4 起每帧扫 "resource_points" 组）
 
 var _spawn_timer: float = 0.0
 var _spawn_pause_timer: float = 0.0  ## 精英击杀 10s 安全窗接口（M6 接线）
@@ -95,9 +95,19 @@ func _physics_process(delta: float) -> void:
 			_enter_collapse()
 	else:
 		_collapse_time += delta
+	_update_loot_pressure()
 	_update_flow(delta)
 	Debug.heat = heat
 	Debug.spawn_interval = _current_interval()
+
+
+## 驻留侦测（M4 接线）：任一资源点读条中 → 刷入间隔减半（economy/pressure-design）。
+func _update_loot_pressure() -> void:
+	loot_pressure = false
+	for node in get_tree().get_nodes_in_group("resource_points"):
+		if (node as ResourcePoint).is_dwelling():
+			loot_pressure = true
+			return
 
 
 func _current_interval() -> float:
