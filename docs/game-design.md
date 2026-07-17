@@ -135,6 +135,7 @@
 - 地图生成规则：`docs/mapgen-design.md`（v1，2026-07-17）
 - 信息与 UI：`docs/ui-design.md`（v1，2026-07-17）
 - 角色设计：`docs/character-design.md`（v1，2026-07-17）
+- 素材清单：`docs/asset-list.md`（v1，2026-07-17，素材管理以此为准）
 
 ## 待定问题（按解决优先级）
 
