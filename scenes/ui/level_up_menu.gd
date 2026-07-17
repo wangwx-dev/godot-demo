@@ -1,7 +1,7 @@
 class_name LevelUpMenu
 extends CanvasLayer
 ## 升级三选一弹窗（upgrade-design：暂停游戏、白70/蓝25 权重、去重、满层不入池、
-## 重随 10×2ⁿ⁻¹ 金累计计价、跳过补偿 15 金）。紫卡 MVP 暂缓（mvp-plan M3）。
+## 重随 10×2ⁿ⁻¹ 金单次弹窗内翻倍、下次三选一重置回 10、跳过补偿 15 金）。紫卡 MVP 暂缓（mvp-plan M3）。
 ## 抽卡走 RunRng "upgrade" 流——同种子同选择序列可复现。
 
 const REROLL_BASE: int = 10
@@ -30,6 +30,7 @@ const RARITY_COLORS: Array[Color] = [
 
 var _pending_levels: int = 0
 var _offer: Array[UpgradeData] = []
+var _reroll_count: int = 0  ## 本次三选一内的重随次数，每次弹窗重置（试玩校准：原设计每局累计）
 
 var _panel: PanelContainer
 var _title: Label
@@ -89,6 +90,7 @@ func _on_leveled_up(_level: int) -> void:
 func _open() -> void:
 	get_tree().paused = true
 	visible = true
+	_reroll_count = 0
 	_roll_offer()
 	_refresh()
 
@@ -96,6 +98,7 @@ func _open() -> void:
 func _close() -> void:
 	_pending_levels -= 1
 	if _pending_levels > 0:
+		_reroll_count = 0
 		_roll_offer()
 		_refresh()
 		return
@@ -149,7 +152,7 @@ func _refresh() -> void:
 
 
 func reroll_cost() -> int:
-	return REROLL_BASE * int(pow(2.0, RunState.reroll_count))
+	return REROLL_BASE * int(pow(2.0, _reroll_count))
 
 
 func _make_card(upgrade: UpgradeData) -> Button:
@@ -183,7 +186,7 @@ func _on_reroll() -> void:
 	if RunState.gold < cost:
 		return
 	RunState.add_gold(-cost)
-	RunState.reroll_count += 1
+	_reroll_count += 1
 	_roll_offer()
 	_refresh()
 

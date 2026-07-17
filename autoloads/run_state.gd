@@ -13,7 +13,6 @@ var gold: int = 0
 var backpack: Array[LootData] = []
 var upgrades: Dictionary = {}  ## UpgradeData → 已拿层数
 var weapon_levels: Dictionary = {}  ## WeaponData → 等级（起始 1，专属卡 +1）
-var reroll_count: int = 0  ## 重随全局累计计价 10×2ⁿ⁻¹（upgrade-design）
 var assault_triggered: bool = false
 
 var max_hp: int = 100
@@ -28,7 +27,6 @@ func reset() -> void:
 	backpack.clear()
 	upgrades.clear()
 	weapon_levels.clear()
-	reroll_count = 0
 	assault_triggered = false
 	max_hp = 100
 	hp = max_hp
