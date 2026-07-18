@@ -4,6 +4,14 @@ extends SceneTree
 ##   godot --headless --path . --import           # 先导入图集资源
 ##   godot --headless --path . --script res://tools/build_map_assets.gd
 ## 素材来源：Zombie Apocalypse Tileset (Ittai Manero)，由 tools/import_environment_assets.ps1 导入。
+##
+## 布局规则（2026-07-18 重设计，试玩反馈修订）：
+##   1. 道路统一：全部模块横向沥青主干道贯穿 rows 18-22（乡村模块用磨损版），拼接无缝；
+##      纵向路只在模块内部走行，端头用路障封口，不触上下接缝
+##   2. 围栏不再画封闭矩形：只留两端开放的短段/残角做掩体与视觉引导
+##   3. 碰撞白名单：建筑/整车残骸/油泵/风车/大干草垛才有碰撞；
+##      树桩、路牌、墓碑、稻草人、轮胎、锥桶等一律纯装饰
+##   4. 装饰成簇摆放、底噪减量；每模块可走面积 ≥85%，障碍岛状分布不成墙
 
 const TILE: int = 32
 const CELLS: int = 40  # 40×40 格 = 1280×1280（mapgen-design 模块规格）
@@ -15,6 +23,12 @@ const DATA_DIR: String = "res://resources/modules/tiled/"
 const MODULE_SCRIPT: String = "res://scenes/levels/modules/map_module_tiled.gd"
 
 const MapModuleDataScript = preload("res://resources/map_module_data.gd")
+
+## 碰撞白名单修正：清单里标 solid 但按新规则应为纯装饰的 tile
+const SOLID_OVERRIDES: Dictionary = {
+	"tree_stump": false,  # 膝盖高的树桩不该挡人
+	"straw_mid": false,   # 小草垛过得去，只有 straw_big 当掩体
+}
 
 var coords: Dictionary = {}  # tile 名 -> 图集坐标 Vector2i
 var tileset: TileSet
@@ -57,7 +71,10 @@ func _build_tileset() -> void:
 		var c: Vector2i = Vector2i(int(t["x"]), int(t["y"]))
 		src.create_tile(c)
 		coords[t["name"]] = c
-		if int(t["solid"]) == 1:
+		var solid: bool = int(t["solid"]) == 1
+		if SOLID_OVERRIDES.has(t["name"]):
+			solid = SOLID_OVERRIDES[t["name"]]
+		if solid:
 			var td: TileData = src.get_tile_data(c, 0)
 			td.add_collision_polygon(0)
 			td.set_collision_polygon_points(0, 0, full_cell)
@@ -141,23 +158,23 @@ func _occupied(ctx: Dictionary, x: int, y: int) -> bool:
 	return ctx["obst"].get_cell_source_id(Vector2i(x, y)) != -1
 
 
-## 底层泥地：加权随机变体
+## 底层泥地：加权随机变体（噪点 tile 压到 6%，视觉更干净）
 func _fill_base(ctx: Dictionary) -> void:
 	var rng: RandomNumberGenerator = ctx["rng"]
 	for y in range(CELLS):
 		for x in range(CELLS):
 			var r: float = rng.randf()
 			var n: String = "dirt_a"
-			if r > 0.55 and r <= 0.85:
+			if r > 0.70 and r <= 0.94:
 				n = "dirt_b"
-			elif r > 0.85 and r <= 0.93:
+			elif r > 0.94 and r <= 0.97:
 				n = "dirt_twigs_a"
-			elif r > 0.93:
+			elif r > 0.97:
 				n = "dirt_twigs_b"
 			_g(ctx, x, y, n)
 
 
-## 横向沥青路（5 格高：上边线/路面/中线/路面/下边线）
+## 横向沥青路（5 格高：上边线/路面/中线/路面/下边线），城镇干净版
 func _road_h(ctx: Dictionary, y0: int, x0: int = 0, x1: int = CELLS - 1) -> void:
 	for x in range(x0, x1 + 1):
 		_g(ctx, x, y0, "road_edge_h_top")
@@ -167,14 +184,36 @@ func _road_h(ctx: Dictionary, y0: int, x0: int = 0, x1: int = CELLS - 1) -> void
 		_g(ctx, x, y0 + 4, "road_edge_h_bottom")
 
 
-## 纵向沥青路
-func _road_v(ctx: Dictionary, x0: int, y0: int = 0, y1: int = CELLS - 1) -> void:
+## 横向沥青路磨损版（乡村）：中线断续褪色 + 路面泥土斑块做旧
+func _road_h_worn(ctx: Dictionary, y0: int, wear: int = 8) -> void:
+	var rng: RandomNumberGenerator = ctx["rng"]
+	for x in range(CELLS):
+		_g(ctx, x, y0, "road_edge_h_top")
+		_g(ctx, x, y0 + 1, "road_plain")
+		_g(ctx, x, y0 + 2, "road_line_h_mid" if rng.randf() < 0.45 else "road_plain")
+		_g(ctx, x, y0 + 3, "road_plain")
+		_g(ctx, x, y0 + 4, "road_edge_h_bottom")
+	for i in range(wear):
+		_d(ctx, rng.randi_range(1, CELLS - 2), y0 + 1 + rng.randi_range(0, 2), "path_patch")
+
+
+## 纵向沥青路段（只在模块内部使用，端头必须 _roadblock 封口，不触上下接缝）
+func _road_v(ctx: Dictionary, x0: int, y0: int, y1: int) -> void:
 	for y in range(y0, y1 + 1):
 		_g(ctx, x0, y, "road_edge_v_left")
 		_g(ctx, x0 + 1, y, "road_plain")
 		_g(ctx, x0 + 2, y, "road_dash_v")
 		_g(ctx, x0 + 3, y, "road_plain")
 		_g(ctx, x0 + 4, y, "road_edge_v_right")
+
+
+## 纵向路端头路障封口：残骸横堵 + 锥桶警示（叙事：疏散封锁线）
+func _roadblock_v(ctx: Dictionary, x0: int, y: float, wreck: String) -> void:
+	_prop(ctx, wreck, x0 + 2.5, y, true)
+	_prop(ctx, "barrier_striped", x0 + 0.8, y + 0.9, false)
+	_prop(ctx, "barrier_striped", x0 + 4.2, y - 0.9, false)
+	_prop(ctx, "traffic_cone", x0 + 1.2, y - 1.3, false)
+	_prop(ctx, "traffic_cone", x0 + 3.8, y + 1.4, false)
 
 
 ## 横路上的斑马线（两列宽，竖条纹 tile）
@@ -200,83 +239,71 @@ func _manholes(ctx: Dictionary, count: int, y0: int, x0: int = 2, x1: int = CELL
 		_g(ctx, x, y0 + 1 + rng.randi_range(0, 1) * 2, "road_manhole")
 
 
-## 泥土小径（横，2 格宽）
-func _path_h(ctx: Dictionary, y0: int, x0: int = 0, x1: int = CELLS - 1) -> void:
-	var rng: RandomNumberGenerator = ctx["rng"]
-	for x in range(x0, x1 + 1):
-		_g(ctx, x, y0, "path_h")
-		_g(ctx, x, y0 + 1, "path_h" if rng.randf() < 0.8 else "path_patch")
-
-
-## 泥土小径（纵，2 格宽）
-func _path_v(ctx: Dictionary, x0: int, y0: int = 0, y1: int = CELLS - 1) -> void:
+## 泥土支径（纵，2 格宽）：从主干道通向 POI 的短接驳，不做贯穿路
+func _path_v(ctx: Dictionary, x0: int, y0: int, y1: int) -> void:
 	var rng: RandomNumberGenerator = ctx["rng"]
 	for y in range(y0, y1 + 1):
 		_g(ctx, x0, y, "path_v")
 		_g(ctx, x0 + 1, y, "path_v" if rng.randf() < 0.8 else "path_patch")
 
 
-## 农田块：庄稼行与垄沟交替
+## 泥土支径（横，2 格宽）
+func _path_h(ctx: Dictionary, y0: int, x0: int, x1: int) -> void:
+	var rng: RandomNumberGenerator = ctx["rng"]
+	for x in range(x0, x1 + 1):
+		_g(ctx, x, y0, "path_h")
+		_g(ctx, x, y0 + 1, "path_h" if rng.randf() < 0.8 else "path_patch")
+
+
+## 农田块：庄稼行与垄沟交替（无围栏，可走的视觉密度层）
 func _crop_field(ctx: Dictionary, x0: int, y0: int, x1: int, y1: int, grown: String) -> void:
 	for y in range(y0, y1 + 1):
 		for x in range(x0, x1 + 1):
 			_g(ctx, x, y, grown if y % 2 == 0 else "crops_tilled")
 
 
-## 矮木围栏矩形（gaps 里的格子留口）
-func _rail_rect(ctx: Dictionary, x0: int, y0: int, x1: int, y1: int, gaps: Array) -> void:
+## 矮木围栏横向短段（两端开放；≤6 格，只做掩体/引导不围圈）
+func _rail_run_h(ctx: Dictionary, x0: int, x1: int, y: int) -> void:
 	for x in range(x0, x1 + 1):
-		for y in [y0, y1]:
-			if Vector2i(x, y) in gaps:
-				continue
-			var n: String = "rail_h_plain"
-			if x == x0:
-				n = "rail_h_left"
-			elif x == x1:
-				n = "rail_h_right"
-			_o(ctx, x, y, n)
-	for y in range(y0 + 1, y1):
-		for x in [x0, x1]:
-			if Vector2i(x, y) in gaps:
-				continue
-			_o(ctx, x, y, "rail_v_a" if y % 2 == 0 else "rail_v_b")
+		var n: String = "rail_h_plain"
+		if x == x0:
+			n = "rail_h_left"
+		elif x == x1:
+			n = "rail_h_right"
+		_o(ctx, x, y, n)
 
 
-## 白桩栅栏矩形（花园）
-func _picket_rect(ctx: Dictionary, x0: int, y0: int, x1: int, y1: int, gaps: Array) -> void:
-	for x in range(x0 + 1, x1):
-		for y in [y0, y1]:
-			if Vector2i(x, y) in gaps:
-				continue
-			_o(ctx, x, y, "picket_g" if x % 2 == 0 else "picket_h")
-	for y in range(y0 + 1, y1):
-		for x in [x0, x1]:
-			if Vector2i(x, y) in gaps:
-				continue
-			_o(ctx, x, y, "picket_e" if y % 2 == 0 else "picket_f")
-	_o(ctx, x0, y0, "picket_a")
-	_o(ctx, x1, y0, "picket_b")
-	_o(ctx, x0, y1, "picket_c")
-	_o(ctx, x1, y1, "picket_d")
+## 矮木围栏纵向短段
+func _rail_run_v(ctx: Dictionary, x: int, y0: int, y1: int) -> void:
+	for y in range(y0, y1 + 1):
+		_o(ctx, x, y, "rail_v_a" if y % 2 == 0 else "rail_v_b")
 
 
-## 木板院墙矩形（谷仓院）
-func _board_rect(ctx: Dictionary, x0: int, y0: int, x1: int, y1: int, gaps: Array) -> void:
+## 白桩栅栏横向短段
+func _picket_run_h(ctx: Dictionary, x0: int, x1: int, y: int) -> void:
+	for x in range(x0, x1 + 1):
+		_o(ctx, x, y, "picket_g" if x % 2 == 0 else "picket_h")
+
+
+## 白桩栅栏纵向短段
+func _picket_run_v(ctx: Dictionary, x: int, y0: int, y1: int) -> void:
+	for y in range(y0, y1 + 1):
+		_o(ctx, x, y, "picket_e" if y % 2 == 0 else "picket_f")
+
+
+## 木板院墙 L 形残角（corner: "nw"/"ne"/"sw"/"se"；arm 为两臂长度）
+func _board_corner(ctx: Dictionary, cx: int, cy: int, corner: String, arm: int = 4) -> void:
 	var pieces: Array = ["board_a", "board_b", "board_c", "board_f", "board_g", "board_h"]
 	var rng: RandomNumberGenerator = ctx["rng"]
-	for x in range(x0, x1 + 1):
-		for y in [y0, y1]:
-			if Vector2i(x, y) in gaps:
-				continue
-			_o(ctx, x, y, pieces[rng.randi_range(0, pieces.size() - 1)])
-	for y in range(y0 + 1, y1):
-		for x in [x0, x1]:
-			if Vector2i(x, y) in gaps:
-				continue
-			_o(ctx, x, y, pieces[rng.randi_range(0, pieces.size() - 1)])
+	var dx: int = 1 if corner in ["nw", "sw"] else -1
+	var dy: int = 1 if corner in ["nw", "ne"] else -1
+	for i in range(arm):
+		_o(ctx, cx + dx * i, cy, pieces[rng.randi_range(0, pieces.size() - 1)])
+	for i in range(1, arm):
+		_o(ctx, cx, cy + dy * i, pieces[rng.randi_range(0, pieces.size() - 1)])
 
 
-## 区域内随机撒（deco 层；避开障碍与外圈）
+## 区域内随机撒（deco 层；避开障碍与外圈）——只用于血迹等战损痕迹
 func _scatter(ctx: Dictionary, names: Array, count: int, x0: int, y0: int, x1: int, y1: int) -> void:
 	var rng: RandomNumberGenerator = ctx["rng"]
 	for i in range(count):
@@ -287,18 +314,30 @@ func _scatter(ctx: Dictionary, names: Array, count: int, x0: int, y0: int, x1: i
 		_d(ctx, x, y, names[rng.randi_range(0, names.size() - 1)])
 
 
-## 树丛：绿冠（可走）里混实心树干（障碍）
+## 装饰簇：围绕中心点成团摆放（花丛/灌木不再均匀撒满地）
+func _cluster(ctx: Dictionary, names: Array, cx: int, cy: int, radius: int, count: int) -> void:
+	var rng: RandomNumberGenerator = ctx["rng"]
+	for i in range(count):
+		var x: int = clampi(cx + rng.randi_range(-radius, radius), 2, CELLS - 3)
+		var y: int = clampi(cy + rng.randi_range(-radius, radius), 2, CELLS - 3)
+		if _occupied(ctx, x, y):
+			continue
+		_d(ctx, x, y, names[rng.randi_range(0, names.size() - 1)])
+
+
+## 树丛：绿冠灌木（可走）+ 少量实心树干障碍（岛状，密度低保证能穿行）
 func _grove(ctx: Dictionary, x0: int, y0: int, x1: int, y1: int, canopies: int, trunks: int) -> void:
 	var rng: RandomNumberGenerator = ctx["rng"]
 	_scatter(ctx, ["bush_a", "bush_b", "bush_c", "bush_d", "bush_e", "bush_f"], canopies, x0, y0, x1, y1)
+	_scatter(ctx, ["tree_stump", "tree_shrub_a", "tree_shrub_b"], maxi(2, canopies / 3), x0, y0, x1, y1)
 	for i in range(trunks):
 		var x: int = rng.randi_range(maxi(x0, 2), mini(x1, CELLS - 3))
 		var y: int = rng.randi_range(maxi(y0, 2), mini(y1, CELLS - 3))
 		if not _occupied(ctx, x, y):
-			_o(ctx, x, y, ["tree_bare", "tree_blossom", "tree_stump"][rng.randi_range(0, 2)])
+			_o(ctx, x, y, "tree_bare" if rng.randf() < 0.6 else "tree_blossom")
 
 
-## 玉米秆密林块（视觉密、可走）
+## 玉米秆密丛块（视觉密、可走；clear_rect 开进出通道与中央空腔）
 func _corn_patch(ctx: Dictionary, x0: int, y0: int, x1: int, y1: int, clear_rect: Rect2i = Rect2i()) -> void:
 	for y in range(y0, y1 + 1):
 		for x in range(x0, x1 + 1):
@@ -307,8 +346,8 @@ func _corn_patch(ctx: Dictionary, x0: int, y0: int, x1: int, y1: int, clear_rect
 			_d(ctx, x, y, "corn_wall")
 
 
-## 摆 prop：坐标为格中心（可用 .5），solid 时挂 StaticBody2D 层 1
-func _prop(ctx: Dictionary, n: String, cx: float, cy: float, solid: bool = true, shrink: Vector2 = Vector2(0.85, 0.7)) -> void:
+## 摆 prop：坐标为格中心（可用 .5）。默认纯装饰；只有白名单大件显式传 solid=true
+func _prop(ctx: Dictionary, n: String, cx: float, cy: float, solid: bool = false, shrink: Vector2 = Vector2(0.85, 0.7)) -> void:
 	var tex: Texture2D = load(PROP_DIR + n + ".png")
 	assert(tex != null, "缺少 prop：" + n)
 	_prop_seq += 1
@@ -354,40 +393,43 @@ func _build_all_modules() -> void:
 	_module_grove()
 
 
-## 加油站：横路贯穿，路北加油站主楼+双泵，路面车祸残骸
+## 加油站：干线贯穿，路北站房+泵岛前场（沥青铺装），路面残骸岛
 func _module_gas_station() -> void:
 	var ctx: Dictionary = _new_ctx("module_gas_station")
 	_fill_base(ctx)
 	_road_h(ctx, 18)
 	_crosswalk_on_road_h(ctx, 30, 18)
 	_manholes(ctx, 3, 18)
-	_path_v(ctx, 19, 23, 39)
 
-	# 加油站主楼（99×90 原图 → 约 6.2×5.6 格），泵岛在楼南
-	_prop(ctx, "gas_station", 10.0, 9.0)
-	_prop(ctx, "gas_pump", 8.5, 14.0, true, Vector2(0.9, 0.9))
-	_prop(ctx, "gas_pump", 12.0, 14.0, true, Vector2(0.9, 0.9))
-	_prop(ctx, "gas_sign", 15.5, 15.0)
+	# 泵岛前场：站房到干线之间整片沥青铺装，加油站才像加油站
+	for y in range(13, 18):
+		for x in range(5, 17):
+			_g(ctx, x, y, "road_plain")
+	_prop(ctx, "gas_station", 10.0, 9.0, true)
+	_prop(ctx, "gas_pump", 8.0, 14.5, true, Vector2(0.9, 0.9))
+	_prop(ctx, "gas_pump", 12.0, 14.5, true, Vector2(0.9, 0.9))
+	_prop(ctx, "gas_sign", 16.5, 13.0)
+	_d(ctx, 6, 16, "blood_b")
+	_d(ctx, 10, 16, "corpse_a")
+	_prop(ctx, "tires_a", 5.5, 13.5)
+	_prop(ctx, "traffic_cone", 14.5, 16.5)
 
-	# 路面残骸带
-	_prop(ctx, "wreck_white_h", 22.0, 20.5)
-	_prop(ctx, "wreck_red_top", 27.5, 19.5)
-	_prop(ctx, "wreck_brown_h2", 7.5, 21.0)
-	_prop(ctx, "tires_a", 18.0, 16.5, false)
-	_prop(ctx, "tires_b", 24.5, 22.5, false)
-	_prop(ctx, "traffic_cone", 20.5, 22.0, false)
-	_prop(ctx, "traffic_cone", 25.0, 18.5, false)
-	_prop(ctx, "barrier_striped", 33.0, 21.5)
-	_prop(ctx, "sign_50", 34.0, 17.0)
-	_prop(ctx, "sign_stop", 16.0, 23.5)
+	# 干线残骸岛（车距拉开，走位空间充足）
+	_prop(ctx, "wreck_white_h", 23.0, 20.5, true)
+	_prop(ctx, "wreck_red_top", 32.0, 19.5, true)
+	_prop(ctx, "traffic_cone", 25.5, 21.5)
+	_prop(ctx, "tires_b", 30.0, 22.3)
+	_prop(ctx, "sign_50", 36.0, 16.8)
+	_prop(ctx, "sign_stop", 18.5, 23.5)
+	_d(ctx, 26, 20, "blood_a")
 
-	# 战损痕迹与植被
-	_scatter(ctx, ["blood_a", "blood_b", "blood_c"], 6, 6, 15, 26, 24)
-	_d(ctx, 13, 16, "corpse_a")
-	_d(ctx, 23, 21, "corpse_b")
-	_grove(ctx, 24, 3, 36, 9, 8, 3)
-	_corn_patch(ctx, 2, 26, 6, 33)
-	_scatter(ctx, ["flowers_a", "flowers_b", "bush_e"], 8, 4, 25, 36, 36)
+	# 北：站房东侧疏林；南：西缘玉米丛 + 弃车 + 花簇
+	_grove(ctx, 24, 3, 36, 10, 9, 3)
+	_corn_patch(ctx, 2, 27, 6, 33)
+	_prop(ctx, "wreck_brown_h2", 12.0, 28.0, true)
+	_d(ctx, 13, 26, "blood_c")
+	_cluster(ctx, ["flowers_a", "flowers_b", "bush_e"], 30, 31, 3, 7)
+	_cluster(ctx, ["bush_a", "bush_d", "tree_stump"], 20, 34, 3, 5)
 
 	_slot(ctx, "slot_spawn", 20.5, 30.5)
 	_slot(ctx, "slot_vehicle", 5.5, 6.5)
@@ -400,13 +442,13 @@ func _module_gas_station() -> void:
 	_save_module(ctx, "module_gas_station", "废弃加油站", "gas_station")
 
 
-## 十字路口：横纵路交汇，中心车祸堆，四象限各有主题角落
+## 十字路口：横干线 + 纵路两段（路障封口不出图），中心车祸地标，四象限开放主题角
 func _module_crossroad() -> void:
 	var ctx: Dictionary = _new_ctx("module_crossroad")
 	_fill_base(ctx)
 	_road_h(ctx, 18)
-	_road_v(ctx, 18, 0, 17)
-	_road_v(ctx, 18, 23, 39)
+	_road_v(ctx, 18, 6, 17)
+	_road_v(ctx, 18, 23, 34)
 	# 十字中心补平路面（盖掉边线相交的杂线）
 	for y in range(18, 23):
 		for x in range(18, 23):
@@ -416,26 +458,28 @@ func _module_crossroad() -> void:
 	_crosswalk_on_road_v(ctx, 18, 15)
 	_crosswalk_on_road_v(ctx, 18, 24)
 	_manholes(ctx, 2, 18)
+	# 纵路端头封锁线（疏散路障，路不出上下接缝）
+	_roadblock_v(ctx, 18, 6.0, "wreck_red_v")
+	_roadblock_v(ctx, 18, 34.0, "wreck_brown_top")
 
-	# 中心车祸堆——路口即地标
-	_prop(ctx, "wreck_red_v", 20.0, 15.5)
-	_prop(ctx, "wreck_white_h", 25.5, 20.5)
-	_prop(ctx, "wreck_brown_top", 19.0, 25.0)
-	_prop(ctx, "tires_c", 22.5, 17.5, false)
-	_prop(ctx, "traffic_cone", 17.0, 20.0, false)
-	_prop(ctx, "traffic_cone", 23.5, 23.0, false)
-	_prop(ctx, "barrier_striped", 14.0, 19.5)
+	# 中心车祸地标
+	_prop(ctx, "wreck_white_h", 26.5, 20.5, true)
+	_prop(ctx, "tires_c", 22.5, 17.3)
+	_prop(ctx, "traffic_cone", 17.0, 20.0)
+	_prop(ctx, "traffic_cone", 23.5, 23.0)
 	_prop(ctx, "sign_stop", 16.5, 16.0)
 	_prop(ctx, "sign_noentry", 24.0, 16.0)
 	_prop(ctx, "sign_nopark", 16.0, 24.5)
+	_d(ctx, 24, 21, "blood_b")
 
-	# 西北：白栅栏花园宅基
-	_picket_rect(ctx, 4, 4, 11, 11, [Vector2i(11, 7), Vector2i(11, 8)])
-	_scatter(ctx, ["flowers_a", "flowers_b", "bush_b", "bush_d"], 10, 5, 5, 10, 10)
+	# 西北：花园宅基残迹（白栅栏 L 形开放短段 + 花簇 + 信箱）
+	_picket_run_h(ctx, 5, 9, 6)
+	_picket_run_v(ctx, 4, 7, 10)
+	_cluster(ctx, ["flowers_a", "flowers_b", "bush_b"], 8, 9, 3, 9)
 	_prop(ctx, "mailbox", 12.5, 9.5)
-	# 东北：小树林
-	_grove(ctx, 26, 3, 36, 12, 10, 4)
-	# 西南：荒坟角
+	# 东北：疏林
+	_grove(ctx, 26, 3, 36, 12, 10, 3)
+	# 西南：荒坟角（墓碑纯装饰，两棵枯树做障碍岛）
 	_prop(ctx, "tombstone", 6.0, 27.0)
 	_prop(ctx, "tombstone", 8.5, 28.5)
 	_prop(ctx, "tombstone", 6.5, 30.5)
@@ -444,10 +488,10 @@ func _module_crossroad() -> void:
 	_o(ctx, 11, 29, "tree_bare")
 	_d(ctx, 8, 30, "corpse_a")
 	_scatter(ctx, ["blood_a", "blood_b"], 4, 5, 26, 12, 33)
-	# 东南：农地角
-	_crop_field(ctx, 27, 27, 35, 34, "crops_tall_a")
-	_prop(ctx, "scarecrow", 31.0, 30.5)
-	_scatter(ctx, ["blood_a", "blood_c", "flowers_a"], 6, 13, 24, 26, 36)
+	# 东南：无围栏庄稼行 + 稻草人
+	_crop_field(ctx, 28, 28, 35, 33, "crops_tall_a")
+	_prop(ctx, "scarecrow", 31.5, 30.5)
+	_scatter(ctx, ["blood_a", "blood_c"], 4, 13, 24, 26, 36)
 
 	_slot(ctx, "slot_spawn", 9.5, 20.5)
 	_slot(ctx, "slot_vehicle", 32.5, 8.5)
@@ -460,182 +504,198 @@ func _module_crossroad() -> void:
 	_save_module(ctx, "module_crossroad", "十字路口", "crossroad")
 
 
-## 农田：围栏麦田+棕顶谷仓+干草堆+风车，小径贯穿
+## 农田：乡道贯穿（磨损），北大麦田+谷仓支径，南新垦田，围栏只留残段
 func _module_farm() -> void:
 	var ctx: Dictionary = _new_ctx("module_farm")
 	_fill_base(ctx)
-	_path_h(ctx, 19)
-	_path_v(ctx, 19, 0, 19)
+	_road_h_worn(ctx, 18, 9)
 
-	# 北侧大麦田（围栏留南口）
+	# 北侧大麦田（无围栏，西/南缘留两截残栏引导视线）
 	_crop_field(ctx, 5, 5, 16, 15, "crops_tall_a")
-	_rail_rect(ctx, 4, 4, 17, 16, [Vector2i(10, 16), Vector2i(11, 16)])
+	_rail_run_v(ctx, 3, 6, 10)
+	_rail_run_h(ctx, 6, 10, 16)
 	_prop(ctx, "scarecrow", 10.5, 9.5)
-	# 谷仓区（东北）
-	_prop(ctx, "barn_tan", 26.5, 10.5)
-	_o(ctx, 31, 13, "straw_big")
-	_o(ctx, 32, 13, "straw_big")
-	_o(ctx, 31, 14, "straw_mid")
-	_prop(ctx, "straw_tall", 33.5, 14.0)
-	_prop(ctx, "straw_small", 30.0, 15.0, false)
-	_prop(ctx, "windmill", 21.0, 5.5)
+	# 谷仓区（东北）+ 支径接乡道
+	_prop(ctx, "barn_tan", 27.0, 9.0, true)
+	_path_v(ctx, 26, 13, 17)
+	_o(ctx, 31, 12, "straw_big")
+	_o(ctx, 32, 12, "straw_big")
+	_d(ctx, 31, 13, "straw_mid")
+	_prop(ctx, "straw_tall", 34.0, 13.5)
+	_prop(ctx, "straw_small", 30.0, 14.5)
+	_prop(ctx, "windmill", 21.0, 5.5, true)
 	_d(ctx, 26, 14, "blood_b")
 	_d(ctx, 27, 15, "corpse_b")
-	# 南侧新垦田（围栏留北口）
-	_crop_field(ctx, 24, 26, 35, 35, "crops_sprout")
-	_rail_rect(ctx, 23, 25, 36, 36, [Vector2i(29, 25), Vector2i(30, 25)])
-	# 西缘树带 + 东北玉米密林
-	_grove(ctx, 2, 22, 8, 36, 6, 4)
+	# 乡道弃车
+	_prop(ctx, "wreck_brown_h", 8.5, 20.5, true)
+	_prop(ctx, "traffic_cone", 11.0, 21.5)
+	# 南侧新垦田（无围栏）+ 西缘疏林
+	_crop_field(ctx, 24, 27, 35, 34, "crops_sprout")
+	_rail_run_h(ctx, 24, 28, 26)
+	_grove(ctx, 2, 23, 8, 36, 7, 3)
 	_corn_patch(ctx, 33, 2, 38, 6)
-	_scatter(ctx, ["flowers_a", "flowers_b", "bush_a", "bush_f"], 10, 2, 2, 37, 17)
-	_scatter(ctx, ["blood_a"], 3, 10, 22, 30, 36)
+	_cluster(ctx, ["flowers_a", "flowers_b", "bush_a"], 20, 26, 3, 8)
+	_cluster(ctx, ["bush_f", "tree_stump", "flowers_b"], 13, 31, 3, 6)
+	_scatter(ctx, ["blood_a"], 3, 10, 23, 30, 36)
 
 	_slot(ctx, "slot_spawn", 14.5, 22.5)
 	_slot(ctx, "slot_vehicle", 7.5, 33.5)
 	_slot(ctx, "slot_vehicle", 35.5, 20.5)
-	_slot(ctx, "slot_resource", 26.5, 13.5)
+	_slot(ctx, "slot_resource", 27.5, 13.5)
 	_slot(ctx, "slot_resource", 10.5, 11.5)
 	_slot(ctx, "slot_resource", 31.5, 30.5)
-	_slot(ctx, "slot_bandage", 21.5, 5.5)
-	_slot(ctx, "slot_bandage", 30.5, 18.5)
+	_slot(ctx, "slot_bandage", 21.5, 8.5)
+	_slot(ctx, "slot_bandage", 30.5, 17.5)
 	_save_module(ctx, "module_farm", "农田", "farm")
 
 
-## 谷仓院：红顶大谷仓+木板院墙（南门），院内尸横遍野
+## 谷仓院：乡道贯穿（磨损），红谷仓+院墙只留两处 L 形残角（全向可进出）
 func _module_barnyard() -> void:
 	var ctx: Dictionary = _new_ctx("module_barnyard")
 	_fill_base(ctx)
-	_path_h(ctx, 19)
-	_path_v(ctx, 19, 17, 19)
+	_road_h_worn(ctx, 18, 8)
 
-	# 院墙（南侧留门）与红谷仓
-	_board_rect(ctx, 12, 4, 27, 17, [Vector2i(19, 17), Vector2i(20, 17)])
-	_prop(ctx, "barn_red", 19.5, 8.5)
-	_o(ctx, 14, 13, "straw_big")
-	_o(ctx, 14, 14, "straw_big")
-	_o(ctx, 15, 13, "straw_mid")
+	# 红谷仓与院墙残角（西北/东北两个 L 角，院子四面敞开）
+	_board_corner(ctx, 12, 4, "nw", 4)
+	_board_corner(ctx, 27, 4, "ne", 4)
+	_prop(ctx, "barn_red", 19.5, 8.5, true)
+	_path_v(ctx, 19, 13, 17)
+	_o(ctx, 13, 12, "straw_big")
+	_o(ctx, 14, 12, "straw_big")
+	_d(ctx, 13, 13, "straw_mid")
 	_prop(ctx, "straw_tall", 24.5, 6.0)
-	_prop(ctx, "tires_b", 24.0, 15.0, false)
-	_prop(ctx, "scarecrow", 25.5, 12.5)
-	# 院内战损（谷仓门口的惨案现场）
+	_prop(ctx, "tires_b", 24.0, 14.0)
+	_prop(ctx, "scarecrow", 26.0, 12.0)
+	# 谷仓门口的惨案现场（装饰簇）
 	_d(ctx, 19, 13, "blood_a")
 	_d(ctx, 20, 14, "blood_b")
 	_d(ctx, 18, 14, "corpse_a")
 	_d(ctx, 21, 13, "corpse_b")
 	_d(ctx, 16, 15, "blood_c")
-	# 院外
-	_grove(ctx, 3, 3, 9, 12, 6, 3)
-	_corn_patch(ctx, 30, 5, 37, 11)
-	_prop(ctx, "windmill", 33.0, 26.5)
-	_prop(ctx, "wreck_brown_h", 9.5, 24.5)
-	_o(ctx, 30, 30, "straw_big")
-	_o(ctx, 31, 30, "straw_mid")
+	# 西北疏林，东南玉米丛，南侧敞牧场
+	_grove(ctx, 3, 3, 9, 12, 6, 2)
+	_corn_patch(ctx, 30, 28, 37, 34)
+	_prop(ctx, "windmill", 33.0, 25.0, true)
+	_prop(ctx, "wreck_brown_h", 9.5, 24.5, true)
+	_o(ctx, 29, 24, "straw_big")
+	_d(ctx, 30, 24, "straw_mid")
 	_prop(ctx, "tombstone", 7.0, 29.0)
 	_prop(ctx, "tombstone", 9.0, 30.5)
 	_d(ctx, 8, 28, "blood_b")
-	_scatter(ctx, ["flowers_a", "flowers_b", "bush_c"], 9, 2, 21, 37, 37)
+	_cluster(ctx, ["flowers_a", "flowers_b", "bush_c"], 17, 30, 3, 7)
+	_cluster(ctx, ["bush_a", "bush_e", "tree_stump"], 24, 33, 3, 5)
 
 	_slot(ctx, "slot_spawn", 19.5, 30.5)
 	_slot(ctx, "slot_vehicle", 5.5, 8.5)
 	_slot(ctx, "slot_vehicle", 34.5, 33.5)
 	_slot(ctx, "slot_resource", 19.5, 12.5)
 	_slot(ctx, "slot_resource", 14.5, 7.5)
-	_slot(ctx, "slot_resource", 30.5, 31.5)
+	_slot(ctx, "slot_resource", 33.5, 30.5)
 	_slot(ctx, "slot_bandage", 25.5, 14.5)
 	_slot(ctx, "slot_bandage", 7.5, 22.5)
 	_save_module(ctx, "module_barnyard", "谷仓院", "barnyard")
 
 
-## 街区：横路+杂货店主楼+花园宅与围栏地块，路障与残骸
+## 街区：干线+杂货店门前铺装，西花园宅残迹，东无围栏田，南疏林坟角
 func _module_town() -> void:
 	var ctx: Dictionary = _new_ctx("module_town")
 	_fill_base(ctx)
 	_road_h(ctx, 18)
 	_crosswalk_on_road_h(ctx, 19, 18)
 	_manholes(ctx, 3, 18)
-	_path_v(ctx, 19, 23, 39)
 
-	# 杂货店（路北正对斑马线）
-	_prop(ctx, "building_store", 16.0, 12.0)
-	_prop(ctx, "mailbox", 20.5, 15.5)
+	# 杂货店门前人行铺装（正对斑马线）
+	for y in range(15, 18):
+		for x in range(12, 21):
+			_g(ctx, x, y, "road_plain")
+	_prop(ctx, "building_store", 16.0, 12.0, true)
+	_prop(ctx, "mailbox", 21.5, 15.5)
 	_prop(ctx, "sign_nopark", 11.5, 16.0)
-	# 西侧白栅栏花园宅
-	_picket_rect(ctx, 3, 9, 10, 16, [Vector2i(10, 12), Vector2i(10, 13)])
-	_scatter(ctx, ["flowers_a", "flowers_b", "bush_b", "bush_e"], 9, 4, 10, 9, 15)
-	# 东侧围栏玉米地块
-	_rail_rect(ctx, 25, 6, 35, 14, [Vector2i(29, 14), Vector2i(30, 14)])
+	_d(ctx, 18, 16, "corpse_a")
+	_d(ctx, 15, 16, "blood_b")
+	# 西侧花园宅残迹（白栅栏开放 L）
+	_picket_run_h(ctx, 4, 8, 10)
+	_picket_run_v(ctx, 3, 11, 14)
+	_cluster(ctx, ["flowers_a", "flowers_b", "bush_b"], 6, 13, 3, 8)
+	# 东侧无围栏庄稼田 + 北缘残栏
 	_crop_field(ctx, 26, 7, 34, 13, "crops_mid")
-	# 路面
-	_prop(ctx, "wreck_red_h", 9.5, 19.5)
-	_prop(ctx, "wreck_white_v", 24.0, 20.5)
-	_prop(ctx, "wreck_brown_h2", 31.5, 19.5)
-	_prop(ctx, "tires_a", 27.0, 22.0, false)
-	_prop(ctx, "traffic_cone", 13.5, 22.0, false)
-	_prop(ctx, "traffic_cone", 22.0, 17.5, false)
-	_prop(ctx, "barrier_striped", 35.0, 19.5)
+	_rail_run_h(ctx, 27, 31, 6)
+	# 干线残骸（两台，间距拉开）
+	_prop(ctx, "wreck_red_h", 9.5, 19.5, true)
+	_prop(ctx, "wreck_white_v", 25.0, 20.5, true)
+	_prop(ctx, "tires_a", 28.0, 22.0)
+	_prop(ctx, "traffic_cone", 13.5, 22.0)
+	_prop(ctx, "traffic_cone", 22.0, 17.5)
+	_prop(ctx, "barrier_striped", 35.5, 19.5)
 	_prop(ctx, "sign_noentry", 23.0, 16.0)
 	_prop(ctx, "sign_50", 5.0, 23.0)
-	# 南侧
-	_corn_patch(ctx, 28, 28, 34, 33)
+	# 南侧：撞出路外的弃车 + 疏林 + 坟角 + 玉米丛
+	_prop(ctx, "wreck_brown_h2", 31.5, 26.0, true)
+	_d(ctx, 30, 25, "blood_c")
+	_grove(ctx, 13, 27, 24, 36, 8, 3)
+	_corn_patch(ctx, 28, 29, 34, 34)
 	_prop(ctx, "tombstone", 8.0, 30.0)
 	_prop(ctx, "tombstone", 10.5, 31.5)
 	_prop(ctx, "tombstone", 8.5, 33.0)
 	_o(ctx, 6, 29, "tree_bare")
-	_grove(ctx, 13, 27, 24, 36, 7, 3)
-	_scatter(ctx, ["blood_a", "blood_b", "blood_c"], 7, 8, 15, 30, 25)
-	_d(ctx, 18, 16, "corpse_a")
+	_scatter(ctx, ["blood_a", "blood_b", "blood_c"], 6, 8, 15, 30, 25)
 
 	_slot(ctx, "slot_spawn", 16.5, 26.5)
-	_slot(ctx, "slot_vehicle", 33.5, 30.5)
+	_slot(ctx, "slot_vehicle", 33.5, 31.5)
 	_slot(ctx, "slot_vehicle", 5.5, 4.5)
-	_slot(ctx, "slot_resource", 16.5, 15.5)
-	_slot(ctx, "slot_resource", 6.5, 12.5)
+	_slot(ctx, "slot_resource", 16.5, 14.5)
+	_slot(ctx, "slot_resource", 6.5, 6.5)
 	_slot(ctx, "slot_resource", 30.5, 10.5)
 	_slot(ctx, "slot_bandage", 24.5, 26.5)
 	_slot(ctx, "slot_bandage", 12.5, 7.5)
 	_save_module(ctx, "module_town", "街区", "town")
 
 
-## 树林墓园：小径十字，西北密林、西南墓园、东南玉米迷丛
+## 林间墓园：林区公路贯穿（重度磨损），支径通墓园与花甸，玉米迷丛开西口
 func _module_grove() -> void:
 	var ctx: Dictionary = _new_ctx("module_grove")
 	_fill_base(ctx)
-	_path_h(ctx, 19)
-	_path_v(ctx, 19)
-	_g(ctx, 19, 19, "path_cross")
-	_g(ctx, 20, 20, "path_cross")
+	_road_h_worn(ctx, 18, 12)
 
-	# 西北密林
-	_grove(ctx, 4, 3, 16, 14, 16, 6)
-	# 东北花甸
-	_scatter(ctx, ["flowers_a", "flowers_b", "bush_a", "bush_d"], 14, 24, 3, 37, 13)
+	# 支径：南接墓园北入口，北接花甸南缘
+	_path_v(ctx, 8, 23, 26)
+	_path_v(ctx, 28, 13, 17)
+	# 公路弃车
+	_prop(ctx, "wreck_white_top", 29.5, 19.5, true)
+	_prop(ctx, "traffic_cone", 32.0, 21.5)
+	_d(ctx, 27, 21, "blood_a")
+
+	# 西北密林（树干障碍岛状，密度可穿行）
+	_grove(ctx, 3, 3, 16, 14, 16, 5)
+	# 东北花甸（花簇成团 + 两棵樱树障碍岛）
+	_cluster(ctx, ["flowers_a", "flowers_b", "bush_d"], 27, 6, 3, 9)
+	_cluster(ctx, ["flowers_a", "flowers_b", "bush_a"], 33, 10, 3, 8)
 	_o(ctx, 30, 8, "tree_blossom")
-	_o(ctx, 26, 5, "tree_blossom")
-	# 西南墓园（围栏留北口）
-	_rail_rect(ctx, 4, 25, 13, 34, [Vector2i(8, 25), Vector2i(9, 25)])
-	_prop(ctx, "tombstone", 6.0, 28.0)
-	_prop(ctx, "tombstone", 9.0, 28.5)
-	_prop(ctx, "tombstone", 11.5, 28.0)
-	_prop(ctx, "tombstone", 6.5, 31.0)
-	_prop(ctx, "tombstone", 9.5, 31.5)
-	_prop(ctx, "tombstone", 11.0, 33.0)
-	_o(ctx, 5, 26, "tree_bare")
-	_o(ctx, 12, 32, "tree_bare")
-	_d(ctx, 8, 30, "corpse_a")
-	_d(ctx, 10, 29, "blood_b")
-	# 东南玉米迷丛（中央空腔藏资源点）
-	_corn_patch(ctx, 26, 25, 36, 35, Rect2i(29, 28, 5, 5))
-	_o(ctx, 31, 30, "straw_mid")
-	# 小径东侧一辆弃车
-	_prop(ctx, "wreck_white_top", 29.5, 19.0)
-	_prop(ctx, "scarecrow", 23.5, 6.0)
-	_scatter(ctx, ["blood_a", "tree_shrub_a", "tree_shrub_b"], 8, 2, 15, 37, 24)
+	_o(ctx, 25, 4, "tree_blossom")
+	_prop(ctx, "scarecrow", 22.5, 6.0)
+	# 西南墓园：北缘两截残栏留宽口，墓碑纯装饰
+	_rail_run_h(ctx, 4, 6, 27)
+	_rail_run_h(ctx, 11, 13, 27)
+	_prop(ctx, "tombstone", 6.0, 29.0)
+	_prop(ctx, "tombstone", 9.0, 29.5)
+	_prop(ctx, "tombstone", 11.5, 29.0)
+	_prop(ctx, "tombstone", 6.5, 32.0)
+	_prop(ctx, "tombstone", 9.5, 32.5)
+	_prop(ctx, "tombstone", 11.0, 34.0)
+	_o(ctx, 4, 30, "tree_bare")
+	_o(ctx, 13, 33, "tree_bare")
+	_d(ctx, 8, 31, "corpse_a")
+	_d(ctx, 10, 30, "blood_b")
+	# 东南玉米迷丛：中央空腔 + 西向开口走廊（藏资源点，进得去出得来）
+	_corn_patch(ctx, 26, 25, 36, 35, Rect2i(26, 28, 8, 5))
+	_d(ctx, 31, 30, "straw_mid")
+	_cluster(ctx, ["bush_c", "tree_stump", "tree_shrub_a"], 20, 33, 3, 5)
 
 	_slot(ctx, "slot_spawn", 19.5, 34.5)
 	_slot(ctx, "slot_vehicle", 34.5, 5.5)
 	_slot(ctx, "slot_vehicle", 5.5, 20.5)
-	_slot(ctx, "slot_resource", 8.5, 29.5)
-	_slot(ctx, "slot_resource", 31.5, 30.5)
+	_slot(ctx, "slot_resource", 8.5, 30.5)
+	_slot(ctx, "slot_resource", 30.5, 30.5)
 	_slot(ctx, "slot_resource", 12.5, 6.5)
 	_slot(ctx, "slot_bandage", 22.5, 12.5)
 	_slot(ctx, "slot_bandage", 27.5, 33.5)
