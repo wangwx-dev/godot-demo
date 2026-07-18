@@ -13,12 +13,14 @@ enum MapType { BATTLE, ELITE, REST, SHOP, ASSAULT }
 
 const CANDIDATE_COUNT: int = 2  ## 每天候选数，MVP 固定 2（mapgen-design 待定 3）
 const SHOP_MIN_OFFERS: int = 2  ## 商店候选每局保底（物资唯一变现渠道）
+const ELITE_MIN_OFFERS: int = 1  ## 精英候选每局保底（高风险高收益选项每局至少见 1 次）
 const SAFE_DROUGHT_LIMIT: int = 3  ## 连续 3 天无休整/商店候选 → 第 4 天必出（合并计算，MVP）
 
 var day: int = 1
 var current_map_type: int = MapType.BATTLE
 var next_candidates: Array[int] = []  ## 本图各载具目的地（=下一天候选）
 var shop_offers: int = 0
+var elite_offers: int = 0
 var safe_drought: int = 0
 var rest_reroll_count: int = 0  ## 休整图重随全局累计计价（economy-design，与弹窗内重随分开）
 var backpack_cap: int = BACKPACK_SIZE
@@ -40,6 +42,7 @@ func reset() -> void:
 	current_map_type = MapType.BATTLE
 	next_candidates = []
 	shop_offers = 0
+	elite_offers = 0
 	safe_drought = 0
 	rest_reroll_count = 0
 	backpack_cap = BACKPACK_SIZE
@@ -158,8 +161,8 @@ func advance_day() -> void:
 ## ---- 路线（M6，mapgen-design 线性日历式） ----
 
 ## 生成下一天候选并缓存（进图时调用一次，载具按此挂目的地牌）。
-## 权重 55/15/15/15、精英第 3 天入池、同天去重、安全图保底、商店每局 ≥2；
-## 精英每局保底次数为待定项（mapgen-design 待定 4），MVP 只走权重。
+## 权重 55/15/15/15、精英第 3 天入池、同天去重、安全图保底、
+## 商店每局 ≥2、精英每局 ≥1（原 mapgen-design 待定 4，2026-07-18 拍板 1 次）。
 func roll_candidates() -> Array[int]:
 	if not next_candidates.is_empty():
 		return next_candidates
@@ -183,8 +186,11 @@ func roll_candidates() -> Array[int]:
 			# 8 次没抽出异类型（≈0.7⁸）：硬替换成休整/商店二选一
 			replacement = MapType.REST if rng.randf() < 0.5 else MapType.SHOP
 		picks[1] = replacement
-	# 商店保底：剩余生成轮次不够补足 2 次 → 强制塞一个商店候选
 	var rounds_left: int = TOTAL_DAYS - day  # 含本轮
+	# 精英保底：剩余轮次不够补足 → 强插（写 picks[0]；商店/安全保底写 picks[1]，互不覆盖）
+	if next_day >= 3 and MapType.ELITE not in picks and elite_offers < ELITE_MIN_OFFERS 			and rounds_left <= ELITE_MIN_OFFERS - elite_offers:
+		picks[0] = MapType.ELITE
+	# 商店保底：剩余生成轮次不够补足 2 次 → 强制塞一个商店候选
 	if MapType.SHOP not in picks and shop_offers < SHOP_MIN_OFFERS 			and rounds_left <= SHOP_MIN_OFFERS - shop_offers:
 		picks[1] = MapType.SHOP
 	# 安全图保底：干旱 3 天必出 1 个（休整/商店合并计）
@@ -193,6 +199,8 @@ func roll_candidates() -> Array[int]:
 	# 记账
 	if MapType.SHOP in picks:
 		shop_offers += 1
+	if MapType.ELITE in picks:
+		elite_offers += 1
 	if MapType.REST in picks or MapType.SHOP in picks:
 		safe_drought = 0
 	else:

@@ -19,6 +19,8 @@
 
 ## 进度备注
 
+- 精英每局保底（2026-07-18，M6 遗留待定项闭环）：RunState 加 ELITE_MIN_OFFERS=1 + elite_offers 记账，剩余轮次不足即强插精英候选（写 picks[0]，与商店/安全保底的 picks[1] 错位互不覆盖，三保底可同天共存）。Debug 新增 `--route-audit=N` 无头审计（批量种子模拟整局候选流，统计精英/商店保底与同种子复现）：修复前基线 500 局 25 局无精英候选（5%），修复后 0 局，商店保底与复现零回归。mapgen-design 待定 4 拍板：每局 ≥1，升 2 与否试玩定。
+
 - 实体素材接线（2026-07-18）：玩家/丧尸全部换正式帧图——Player AnimatedSprite2D（player_walk 9 帧，输入驱动播放/翻面/速度联动帧率，站立定格，无敌半透明，死亡暗红+血迹）；EnemyData 加 sprite_set 字段（walker→skinny_walk、runner→kid_walk、bloater→big_walk），EnemyBase 换 AnimatedSprite2D（错帧起播防齐步走、受击闪白改 flash.gdshader 材质、轮廓色降为 25% 染色保留颜色语言、死亡掉血迹贴花）；臃肿者膨胀改 sprite 缩放染色+爆炸 6 帧；精英底板复用自动继承。武器特效：球棒 slash 4 帧拖影+淡化弧提示、手枪 tracer 弹道贴图+枪口焰单帧+命中 spark、燃烧瓶落地爆燃+烟+火苗循环帧散布（错帧）+区域圈降透明度。资源点 itembox 贴图按类型染色+开完换破损箱；绷带 bandage_roll。新增 scripts/fx.gd（SpriteFrames 缓存/一次性动画/循环动画/单帧特效/血迹贴花上限 80 先进先出）+ flash.gdshader。Fusion Pixel 12px 设为全局主题字体（project.godot [gui]）。QA：30s 实跑零报错，截图确认玩家/丧尸/血迹/箱体/字体全部上屏。asset-list 对应 13 行推 ✅。
 
 - 地图布局重设计（2026-07-18，试玩反馈修订：树桩碰撞/围栏圈死区/道路断头/地面噪点四项）：道路统一——全部 6 模块横向沥青干道贯穿 rows 18-22（乡村模块 _road_h_worn 磨损版：中线断续+路面泥斑做旧），任意拼接组合无缝；纵向路只在十字路口模块内部走行、端头 _roadblock_v 路障封口（残骸+锥桶，疏散封锁线叙事）不触上下接缝；土径降级为干道→POI 短支径。围栏退役封闭矩形：改 _rail/_picket_run 两端开放短段（≤6 格）+ _board_corner L 形残角，庄稼田全部去围栏直接铺（可走视觉密度层）。碰撞白名单：tile 层 SOLID_OVERRIDES 把 tree_stump/straw_mid 降为装饰；prop 默认 solid=false，仅建筑/整车残骸/油泵/风车/straw_big 显式碰撞（墓碑/路牌/稻草人/轮胎/锥桶/信箱全放行）。地面降噪（twigs 15%→6%）+ 花丛灌木 _cluster 成簇替代均匀撒。加油站泵岛前场、杂货店门前人行道整片沥青铺装。插槽坐标与 MapModuleTiled 接口不变。QA：6 模块+拼接预览重渲、游戏内实跑零报错。

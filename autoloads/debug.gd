@@ -22,6 +22,9 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--shot="):
 			_shot_frame = int(arg.trim_prefix("--shot="))
+		elif arg.begins_with("--route-audit="):
+			# 路线审计：批量种子模拟整局候选流，验证保底与同种子复现（无头 QA）
+			_route_audit.call_deferred(int(arg.trim_prefix("--route-audit=")))
 	var layer: CanvasLayer = CanvasLayer.new()
 	layer.layer = 100
 	_label = Label.new()
@@ -71,3 +74,45 @@ func _unhandled_input(event: InputEvent) -> void:
 			RunState.add_gold(100)
 		KEY_F3:
 			RunState.advance_day()
+
+
+## ---- 路线审计（--route-audit=N）----
+
+## N 个种子各模拟一整局候选流：统计无精英候选的局数、同种子复现失败数。
+func _route_audit(runs: int) -> void:
+	var no_elite: int = 0
+	var no_shop_min: int = 0
+	var repro_fail: int = 0
+	for i in runs:
+		var audit_seed: int = 100003 + i * 7919
+		var seq_a: Array = _simulate_route(audit_seed)
+		if seq_a != _simulate_route(audit_seed):
+			repro_fail += 1
+		var elite_hits: int = 0
+		var shop_hits: int = 0
+		for picks in seq_a:
+			if RunState.MapType.ELITE in picks:
+				elite_hits += 1
+			if RunState.MapType.SHOP in picks:
+				shop_hits += 1
+		if elite_hits == 0:
+			no_elite += 1
+		if shop_hits < RunState.SHOP_MIN_OFFERS:
+			no_shop_min += 1
+	print("[route-audit] 局数=%d  无精英候选局=%d  商店不足2局=%d  复现失败=%d" % [
+			runs, no_elite, no_shop_min, repro_fail])
+	get_tree().quit(0)
+
+
+## 单局模拟：滚完 8 天候选直到总攻，出口交替选择覆盖两条访问路径。
+func _simulate_route(sim_seed: int) -> Array:
+	RunRng.start_run(sim_seed)
+	RunState.reset()
+	var seq: Array = []
+	while true:
+		var picks: Array[int] = RunState.roll_candidates()
+		seq.append(picks.duplicate())
+		if RunState.MapType.ASSAULT in picks:
+			break
+		RunState.depart(picks[RunState.day % 2])
+	return seq
