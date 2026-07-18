@@ -11,14 +11,18 @@ func _try_attack() -> bool:
 	var target: EnemyBase = _nearest_enemy()
 	if target == null:
 		return false
+	var direction: Vector2 = (target.global_position - global_position).normalized()
 	var bullet: Bullet = _bullet_scene.instantiate()
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = global_position
 	bullet.launch(
-		(target.global_position - global_position).normalized(),
+		direction,
 		data.geometry_params.get("bullet_speed", 600.0),
 		effective_damage(),
 		int(data.geometry_params.get("pierce", 0) + _level_sum("pierce_add")),
 		effective_range()
 	)
+	# 枪口焰：单帧短闪，贴在出膛方向
+	Fx.single(get_tree().current_scene, "weapons/muzzle_flash.png",
+			global_position + direction * 18.0, 0.07, 1.4, direction.angle())
 	return true

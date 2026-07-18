@@ -29,15 +29,20 @@ var _damage_timer: float = 0.0
 var _flash_timer: float = 0.0
 var _player: Player
 
-@onready var body_polygon: Polygon2D = $Body
+@onready var body: AnimatedSprite2D = $Body
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 
 func _ready() -> void:
 	add_to_group("enemies")
 	hp = roundi(data.max_hp * hp_multiplier)
-	body_polygon.color = data.outline_color
-	body_polygon.scale = Vector2.ONE * data.sprite_scale
+	body.sprite_frames = Fx.frames("enemies/" + data.sprite_set, 9, 8.0)
+	body.play("default")
+	body.frame = randi() % 9  # 错帧起播，尸群不齐步走
+	body.scale = Vector2.ONE * data.sprite_scale
+	# 轻度染色保留"轮廓即身份"的颜色语言（0=原图，1=纯色块）
+	body.modulate = Color.WHITE.lerp(data.outline_color, 0.25)
+	body.material = Fx.flash_material()
 	# 缩放碰撞半径而非物理体节点（缩放物理体是 Godot 反模式）
 	var shape: CircleShape2D = collision_shape.shape.duplicate()
 	shape.radius = BODY_RADIUS * data.sprite_scale
@@ -55,7 +60,7 @@ func _process(delta: float) -> void:
 	if state == State.DIE:
 		return
 	_flash_timer -= delta
-	body_polygon.color = Color.WHITE if _flash_timer > 0.0 else data.outline_color
+	(body.material as ShaderMaterial).set_shader_parameter("amount", 1.0 if _flash_timer > 0.0 else 0.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -81,6 +86,9 @@ func _chase(delta: float) -> void:
 	knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, KNOCKBACK_FRICTION * delta)
 	velocity = desired.limit_length(effective_speed) + knockback_velocity
 	move_and_slide()
+	if absf(velocity.x) > 4.0:
+		body.flip_h = velocity.x < 0.0
+	body.speed_scale = clampf(effective_speed / 120.0, 0.6, 2.2)
 	# 接触攻击：贴身 + 自身攻击间隔到点（玩家侧另有 0.5s 受击无敌封顶）
 	_damage_timer -= delta
 	var reach: float = BODY_RADIUS * data.sprite_scale + 14.0 + 6.0
@@ -117,6 +125,7 @@ func take_damage(amount: int, knockback: Vector2 = Vector2.ZERO) -> void:
 
 ## 死亡钩子，特殊尸重载（如臃肿者延迟爆炸）。
 func _on_death() -> void:
+	Fx.blood_decal(get_parent(), global_position, data.sprite_scale)
 	_spawn_drops()
 	queue_free()
 

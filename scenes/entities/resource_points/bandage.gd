@@ -13,6 +13,10 @@ var _player: Player
 func _ready() -> void:
 	add_to_group("bandages")
 	_player = get_tree().get_first_node_in_group("player") as Player
+	var sprite: Sprite2D = Sprite2D.new()
+	sprite.texture = load("res://assets/sprites/pickups/bandage_roll.png")
+	sprite.scale = Vector2.ONE * 1.6
+	add_child(sprite)
 
 
 func _physics_process(_delta: float) -> void:
@@ -24,10 +28,3 @@ func _physics_process(_delta: float) -> void:
 			return
 		RunState.heal(HEAL_AMOUNT)
 		queue_free()
-
-
-func _draw() -> void:
-	# 白底红十字占位
-	draw_rect(Rect2(-8, -8, 16, 16), Color(0.9, 0.9, 0.88))
-	draw_rect(Rect2(-6, -2, 12, 4), Color(0.85, 0.2, 0.2))
-	draw_rect(Rect2(-2, -6, 4, 12), Color(0.85, 0.2, 0.2))

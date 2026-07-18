@@ -21,11 +21,14 @@ var _dodge_timer: float = 0.0
 var _dodge_velocity: Vector2 = Vector2.ZERO
 var _dead: bool = false
 
-@onready var body_polygon: Polygon2D = $Body
+@onready var body: AnimatedSprite2D = $Body
 
 
 func _ready() -> void:
 	add_to_group("player")
+	body.sprite_frames = Fx.frames("characters/player_walk", 9, 10.0)
+	body.play("default")
+	body.pause()
 
 
 ## 强化聚合后的实效属性（每帧读，叠层即时生效）。
@@ -46,9 +49,10 @@ func _physics_process(delta: float) -> void:
 		return
 	_hit_invuln_timer -= delta
 	_dodge_cooldown_timer -= delta
-	body_polygon.color = Color(0.9, 0.85, 0.6, 0.5 if is_invulnerable() else 1.0)
+	body.modulate.a = 0.5 if is_invulnerable() else 1.0
 
 	var input_dir: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	_update_walk_anim(input_dir)
 
 	if _dodge_timer > 0.0:
 		_dodge_timer -= delta
@@ -73,6 +77,19 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
+## 走路动画：有输入播走路帧（速度联动帧率），停下定格站姿帧，横向输入翻面。
+func _update_walk_anim(input_dir: Vector2) -> void:
+	if input_dir.x != 0.0:
+		body.flip_h = input_dir.x < 0.0
+	if input_dir != Vector2.ZERO or _dodge_timer > 0.0:
+		body.speed_scale = maxf(effective_speed() / max_speed, 1.0)
+		if not body.is_playing():
+			body.play("default")
+	else:
+		body.pause()
+		body.frame = 0
+
+
 func is_invulnerable() -> bool:
 	return _hit_invuln_timer > 0.0
 
@@ -88,7 +105,9 @@ func take_damage(amount: int) -> void:
 
 func _die() -> void:
 	_dead = true
-	body_polygon.color = Color(0.4, 0.15, 0.15)
+	body.pause()
+	body.modulate = Color(0.55, 0.25, 0.25)
+	Fx.blood_decal(get_parent(), global_position, 1.4)
 	EventBus.player_died.emit()
 
 

@@ -41,6 +41,10 @@ func _try_attack() -> bool:
 		if absf(_swing_direction.angle_to(to_enemy)) <= half_arc:
 			enemy.take_damage(damage, to_enemy.normalized() * knockback * 6.0)
 	_swing_age = 0.0
+	# 挥砍拖影帧：甩向挥击方向（弧形淡影仍保留作命中范围提示）
+	Fx.one_shot(get_tree().current_scene, "weapons/slash", 4,
+			global_position + _swing_direction * _swing_range * 0.55,
+			22.0, _swing_range / 26.0, _swing_direction.angle())
 	queue_redraw()
 	return true
 
@@ -55,4 +59,4 @@ func _draw() -> void:
 	for i in 13:
 		var angle: float = base_angle - half_arc + deg_to_rad(_swing_arc) * i / 12.0
 		points.append(Vector2.from_angle(angle) * _swing_range)
-	draw_colored_polygon(points, Color(0.9, 0.9, 0.8, 0.35 * alpha))
+	draw_colored_polygon(points, Color(0.9, 0.9, 0.8, 0.22 * alpha))
