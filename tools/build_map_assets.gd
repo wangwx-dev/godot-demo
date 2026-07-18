@@ -391,6 +391,63 @@ func _build_all_modules() -> void:
 	_module_barnyard()
 	_module_town()
 	_module_grove()
+	_build_assault_arena()
+
+
+## 总攻竞技场（M8，非模块）：西侧接应点铺装 + 东侧尸巢，无插槽无迷雾，
+## 出生/Boss 位由 assault_map.gd 硬编码。存成独立场景不挂 MapModuleTiled。
+func _build_assault_arena() -> void:
+	var ctx: Dictionary = _new_ctx("assault_arena")
+	_fill_base(ctx)
+	_road_h_worn(ctx, 18, 16)
+	# 西侧接应点：整片铺装停机坪 + 封锁线残骸（最后的防线叙事）
+	for y in range(13, 28):
+		for x in range(2, 10):
+			_g(ctx, x, y, "road_plain")
+	_prop(ctx, "wreck_white_top", 6.0, 15.5, true)
+	_prop(ctx, "barrier_striped", 10.5, 14.0)
+	_prop(ctx, "barrier_striped", 10.5, 26.0)
+	_prop(ctx, "traffic_cone", 9.5, 17.5)
+	_prop(ctx, "traffic_cone", 9.0, 23.0)
+	_prop(ctx, "sign_warning", 11.5, 20.5)
+	_d(ctx, 7, 19, "blood_b")
+	_d(ctx, 5, 24, "corpse_a")
+	_d(ctx, 8, 25, "blood_a")
+	# 中场掩体：残骸车两台 + 大草垛岛
+	_prop(ctx, "wreck_brown_h", 17.5, 14.5, true)
+	_prop(ctx, "wreck_red_v", 22.0, 26.5, true)
+	_o(ctx, 19, 31, "straw_big")
+	_o(ctx, 20, 31, "straw_big")
+	_o(ctx, 14, 7, "straw_big")
+	# 东侧尸巢：血肉地毯 + 尸堆 + 枯树圈（Boss 老巢，视觉密度拉满）
+	_scatter(ctx, ["blood_a", "blood_b", "blood_c"], 42, 26, 6, 37, 34)
+	_scatter(ctx, ["corpse_a", "corpse_b"], 12, 27, 8, 37, 33)
+	_cluster(ctx, ["bush_c", "bush_f", "tree_shrub_b"], 33, 10, 4, 8)
+	_cluster(ctx, ["bush_c", "bush_f", "tree_shrub_a"], 34, 30, 4, 8)
+	_o(ctx, 28, 9, "tree_bare")
+	_o(ctx, 36, 14, "tree_bare")
+	_o(ctx, 29, 33, "tree_bare")
+	_o(ctx, 37, 27, "tree_bare")
+	_d(ctx, 31, 19, "corpse_b")
+	_d(ctx, 33, 21, "corpse_a")
+	_d(ctx, 32, 20, "blood_c")
+	# 全场零散战损
+	_scatter(ctx, ["blood_a", "blood_c"], 10, 11, 5, 25, 35)
+	_save_plain(ctx, "res://scenes/levels/assault_map/assault_arena.tscn", "AssaultArena")
+
+
+## 存成普通场景（无模块脚本/插槽/数据 .tres）。
+func _save_plain(ctx: Dictionary, scene_path: String, root_name: String) -> void:
+	var root: Node2D = ctx["root"]
+	root.name = root_name
+	_own(root, root)
+	var packed: PackedScene = PackedScene.new()
+	var err: int = packed.pack(root)
+	assert(err == OK, "pack 失败：" + root_name)
+	err = ResourceSaver.save(packed, scene_path)
+	assert(err == OK, "场景保存失败：" + scene_path)
+	print("[build_map_assets] %s 完成" % scene_path)
+	root.free()
 
 
 ## 加油站：干线贯穿，路北站房+泵岛前场（沥青铺装），路面残骸岛

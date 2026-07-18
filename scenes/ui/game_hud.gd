@@ -18,6 +18,7 @@ const GEOMETRY_ICONS: Dictionary = {
 
 var battle_mode: bool = true  ## 休整/商店 false：隐藏警戒条与武器格（安全感做足）
 var director: HeatDirector  ## 战斗图注入（警戒条数据源）
+var boss: EnemyBase  ## 总攻图注入：警戒条位置换 Boss 血条（总攻的时钟是 Boss 的命）
 
 var _root: Control
 var _countdown_label: Label
@@ -64,7 +65,10 @@ func _draw_hud() -> void:
 	_draw_skill_cd(size, font)
 	_draw_resource_cluster(size, font)
 	if battle_mode:
-		_draw_alert_bar(size)
+		if boss != null:
+			_draw_boss_bar(size, font)
+		else:
+			_draw_alert_bar(size)
 
 
 ## ---- 左上：生存簇 ----
@@ -191,3 +195,18 @@ func _draw_alert_bar(size: Vector2) -> void:
 		# 崩溃：满条溢出感——边框深红快闪
 		border = Color(0.9, 0.12, 0.1, 0.55 + 0.45 * sin(msec * 10.0))
 	_root.draw_rect(rect, border, false, 2.0)
+
+
+## ---- 总攻：Boss 血条（顶部居中，ui-design 总攻 HUD） ----
+
+func _draw_boss_bar(size: Vector2, font: Font) -> void:
+	if not is_instance_valid(boss):
+		return
+	var rect: Rect2 = Rect2(size.x / 2.0 - 210.0, 14.0, 420.0, 20.0)
+	var ratio: float = clampf(float(boss.hp) / maxf(boss.data.max_hp, 1), 0.0, 1.0)
+	_root.draw_rect(rect, Color(0.07, 0.05, 0.05, 0.88))
+	_root.draw_rect(Rect2(rect.position, Vector2(rect.size.x * ratio, rect.size.y)),
+			Color(0.72, 0.14, 0.32))
+	_root.draw_rect(rect, Color(0.8, 0.6, 0.65, 0.95), false, 2.0)
+	_root.draw_string(font, Vector2(rect.position.x, rect.position.y + 15.0),
+			boss.data.display_name, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 13, Color(1, 1, 1, 0.92))

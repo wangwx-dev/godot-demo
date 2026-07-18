@@ -43,6 +43,7 @@ static func show_extraction(parent: Node) -> RunSummary:
 
 func _ready() -> void:
 	layer = 95
+	add_to_group("run_summary")  # 无头流转测试的完成探针
 	var dim: ColorRect = ColorRect.new()
 	dim.color = Color(0.04, 0.02, 0.02, 0.72)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
