@@ -32,3 +32,17 @@ TakWolf 等（缝合像素字体，SIL OFL 1.1——随游戏分发时保留 ass
 - cuddle bug 角色包派生文件（实装 NPC 后）
 
 恢复方式：素材库 `D:\personal\game-assets\` + `tools\import_environment_assets.ps1` / `tools\import_entity_assets.ps1` 重新产出。
+
+## LPC 角色（2026-07-18 角色素材升级）
+
+- **幸存者角色**（`characters/lpc_survivor_walk.png`，tools/build_lpc_characters.py 合成）：
+  图层来自 [Universal LPC Spritesheet Character Generator](https://github.com/liberatedpixelcup/Universal-LPC-Spritesheet-Character-Generator)
+  （body/head: Stephen Challener (Redshrike)、bluecarrot16、Benjamin K. Smith (BenCreating)、Evert、Eliza Wyatt (ElizaWy)、MadMarcel、TheraHedwig、Matthew Krohn (makrohn)、Johannes Sjölund (wulax)、Stafford McIntyre、Nila122 等；
+  longsleeve/pants/shoes: bluecarrot16、David Conway Jr. (JaidynReiman)、ElizaWy、Pierre Vigier (pvigier)、Michael Whitlock (bigbeargames)、Mark Weyer、Thane Brimhall (pennomi)、laetissima 等；
+  hair (messy1): JaidynReiman 等）。许可证：CC-BY-SA 3.0 / GPL 3.0。
+  完整逐部件署名以仓库 CREDITS.csv 为准。
+- **丧尸**（`enemies/lpc_zombie_walk.png`，取自完整表 walk 行）：
+  ["[LPC] Zombie"](https://opengameart.org/content/lpc-zombie) by Benjamin K. Smith (BenCreating), commissioned by castelonia，
+  基于 Stephen Challener (Redshrike) 的 LPC 男性基础。许可证：CC-BY-SA 3.0 / GPL 3.0。
+
+> 注意：CC-BY-SA 素材要求署名与相同方式共享（对美术资产层面）。发布时本 CREDITS 须随游戏附带。

@@ -20,17 +20,17 @@ var _dodge_cooldown_timer: float = 0.0
 var _dodge_timer: float = 0.0
 var _dodge_velocity: Vector2 = Vector2.ZERO
 var _dead: bool = false
+var _facing: String = "down"
 
 @onready var body: AnimatedSprite2D = $Body
 
 
 func _ready() -> void:
 	add_to_group("player")
-	# 红夹克皮肤（variant 帧图 0/3/6 为红衣三帧循环）；放大 1.55——角色不必被 1 格框死
-	body.sprite_frames = Fx.frames_indexed("characters/player_variant", [0, 3, 6], 8.0)
-	body.scale = Vector2.ONE * 1.55
-	body.play("default")
-	body.pause()
+	# LPC 幸存者（tools/build_lpc_characters.py 合成）：四方向走路 + 站立
+	body.sprite_frames = Fx.dir_frames("characters/lpc_survivor_walk.png", 11.0)
+	body.offset = Vector2(0, -18)  # 脚底贴近碰撞中心（俯视 3/4 视角）
+	body.play("idle_down")
 
 
 ## 强化聚合后的实效属性（每帧读，叠层即时生效）。
@@ -85,17 +85,15 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
-## 走路动画：有输入播走路帧（速度联动帧率），停下定格站姿帧，横向输入翻面。
+## 四方向走路动画：主导轴定朝向，停下切站立帧，移速联动帧率。
 func _update_walk_anim(input_dir: Vector2) -> void:
-	if input_dir.x != 0.0:
-		body.flip_h = input_dir.x < 0.0
-	if input_dir != Vector2.ZERO or _dodge_timer > 0.0:
-		body.speed_scale = maxf(effective_speed() / max_speed, 1.0)
-		if not body.is_playing():
-			body.play("default")
-	else:
-		body.pause()
-		body.frame = 0
+	if input_dir != Vector2.ZERO:
+		_facing = Fx.dir_name(input_dir)
+	var moving: bool = input_dir != Vector2.ZERO or _dodge_timer > 0.0
+	body.speed_scale = maxf(effective_speed() / max_speed, 1.0)
+	var anim: String = ("walk_" if moving else "idle_") + _facing
+	if body.animation != anim:
+		body.play(anim)
 
 
 func is_invulnerable() -> bool:

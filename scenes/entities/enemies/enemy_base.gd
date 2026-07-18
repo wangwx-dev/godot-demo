@@ -36,12 +36,13 @@ var _player: Player
 func _ready() -> void:
 	add_to_group("enemies")
 	hp = roundi(data.max_hp * hp_multiplier)
-	body.sprite_frames = Fx.frames("enemies/" + data.sprite_set, 9, 8.0)
-	body.play("default")
-	body.frame = randi() % 9  # 错帧起播，尸群不齐步走
+	body.sprite_frames = Fx.dir_frames("enemies/" + data.sprite_set + ".png", 7.0)
+	body.play("walk_down")
+	body.frame = randi() % 8  # 错帧起播，尸群不齐步走
+	body.offset = Vector2(0, -18)
 	body.scale = Vector2.ONE * data.sprite_scale
-	# 轻度染色保留"轮廓即身份"的颜色语言（0=原图，1=纯色块）
-	body.modulate = Color.WHITE.lerp(data.outline_color, 0.25)
+	# 染色保留"轮廓即身份"的颜色语言（同底板丧尸靠体型+色相区分）
+	body.modulate = Color.WHITE.lerp(data.outline_color, 0.35)
 	body.material = Fx.flash_material()
 	# 缩放碰撞半径而非物理体节点（缩放物理体是 Godot 反模式）
 	var shape: CircleShape2D = collision_shape.shape.duplicate()
@@ -86,8 +87,10 @@ func _chase(delta: float) -> void:
 	knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, KNOCKBACK_FRICTION * delta)
 	velocity = desired.limit_length(effective_speed) + knockback_velocity
 	move_and_slide()
-	if absf(velocity.x) > 4.0:
-		body.flip_h = velocity.x < 0.0
+	if velocity.length() > 4.0:
+		var anim: String = "walk_" + Fx.dir_name(velocity)
+		if body.animation != anim:
+			body.play(anim)
 	body.speed_scale = clampf(effective_speed / 120.0, 0.6, 2.2)
 	# 接触攻击：贴身 + 自身攻击间隔到点（玩家侧另有 0.5s 受击无敌封顶）
 	_damage_timer -= delta

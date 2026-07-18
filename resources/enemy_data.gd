@@ -10,6 +10,6 @@ extends Resource
 @export var xp_drop: int = 1
 @export var gold_chance: float = 0.1
 @export var sprite_scale: float = 1.0
-@export var sprite_set: String = "skinny_walk"  ## assets/sprites/enemies/ 下的走路帧前缀
+@export var sprite_set: String = "lpc_zombie_walk"  ## assets/sprites/enemies/ 下的 LPC 走路表名
 @export var outline_color: Color = Color(0.2, 0.45, 0.2)  ## 轮廓即身份
 @export var behavior_scene: PackedScene  ## 特殊尸重载行为的场景，空 = 直线追踪

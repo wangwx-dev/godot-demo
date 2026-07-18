@@ -27,6 +27,44 @@ static func frames(prefix: String, count: int, fps: float = 8.0, loop: bool = tr
 	return sf
 
 
+const DIR_NAMES: Array[String] = ["up", "left", "down", "right"]  # LPC 通用行序
+
+
+## LPC 走路表（576x256：4 方向行 x 9 列，col0=站立）→ walk_*/idle_* 八动画
+static func dir_frames(sheet_path: String, fps: float = 10.0) -> SpriteFrames:
+	var key: String = "dir|%s|%.1f" % [sheet_path, fps]
+	if _frames_cache.has(key):
+		return _frames_cache[key]
+	var tex: Texture2D = load(SPRITE_ROOT + sheet_path)
+	assert(tex != null, "缺少帧图：" + sheet_path)
+	var sf: SpriteFrames = SpriteFrames.new()
+	for row in 4:
+		var walk_name: String = "walk_" + DIR_NAMES[row]
+		sf.add_animation(walk_name)
+		sf.set_animation_speed(walk_name, fps)
+		sf.set_animation_loop(walk_name, true)
+		for col in range(1, 9):
+			var frame: AtlasTexture = AtlasTexture.new()
+			frame.atlas = tex
+			frame.region = Rect2(col * 64, row * 64, 64, 64)
+			sf.add_frame(walk_name, frame)
+		var idle_name: String = "idle_" + DIR_NAMES[row]
+		sf.add_animation(idle_name)
+		var idle: AtlasTexture = AtlasTexture.new()
+		idle.atlas = tex
+		idle.region = Rect2(0, row * 64, 64, 64)
+		sf.add_frame(idle_name, idle)
+	_frames_cache[key] = sf
+	return sf
+
+
+## 向量 → LPC 方向名（主导轴决定）
+static func dir_name(v: Vector2) -> String:
+	if absf(v.x) >= absf(v.y):
+		return "right" if v.x >= 0.0 else "left"
+	return "down" if v.y >= 0.0 else "up"
+
+
 ## 按指定帧序构建（一张帧图序列里交错存多套皮肤时用，如 player_variant 三套衣服）
 static func frames_indexed(prefix: String, indices: Array, fps: float = 8.0, loop: bool = true) -> SpriteFrames:
 	var key: String = "%s|%s|%.1f|%s" % [prefix, str(indices), fps, loop]
