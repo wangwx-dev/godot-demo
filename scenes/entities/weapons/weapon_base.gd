@@ -60,6 +60,11 @@ func effective_knockback() -> float:
 	return data.knockback + _level_sum("knockback_add")
 
 
+## 冷却剩余占比（HUD 武器格冷却罩用）：1=刚打完，0=可用。
+func cd_fraction() -> float:
+	return clampf(_cooldown / maxf(effective_interval(), 0.01), 0.0, 1.0)
+
+
 ## ---- 索敌 ----
 
 ## 索敌半径内最近的活敌人。

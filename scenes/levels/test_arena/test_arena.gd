@@ -54,6 +54,10 @@ func _ready() -> void:
 	var hud: PressureHud = PressureHud.new()
 	add_child(hud)
 	hud.setup(_director)
+	var game_hud: GameHud = GameHud.new()
+	game_hud.battle_mode = true
+	game_hud.director = _director
+	add_child(game_hud)
 	_equip(PISTOL_DATA)
 	# 副武器：燃烧瓶直接挂上（正式版进图搜/商店买，M4+；M3 先验证自动释放与强化）
 	var molotov: WeaponArea = WeaponArea.new()
@@ -61,7 +65,6 @@ func _ready() -> void:
 	player.add_child(molotov)
 	add_child(LevelUpMenu.new())
 	add_child(BackpackSwapMenu.new())
-	add_child(EconomyHud.new())
 	_place_resource_points()
 	# 迷雾+迷你图（图内生命周期，tech-design §2）
 	_fog = FogOverlay.new()
@@ -251,27 +254,9 @@ func _equip(weapon_data: WeaponData) -> void:
 	print("[TestArena] 武器: %s" % weapon_data.display_name)
 
 
-## 死亡提示（临时版）：变暗红+不能动=死了，挂个字免得看不懂；正式结算画面归 M7。
+## 死亡结算（M7 正式版）：损失明账 + R 重开。
 func _on_player_died() -> void:
-	_death_layer = CanvasLayer.new()
-	_death_layer.layer = 99
-	var dim: ColorRect = ColorRect.new()
-	dim.color = Color(0.1, 0.0, 0.0, 0.45)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_death_layer.add_child(dim)
-	var label: Label = Label.new()
-	label.text = "你死了
-本局收益全丢（设计如此）
-
-按 R 重开"
-	label.add_theme_font_size_override("font_size", 40)
-	label.add_theme_color_override("font_color", Color(0.9, 0.3, 0.25))
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.set_anchors_preset(Control.PRESET_CENTER)
-	label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	label.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_death_layer.add_child(label)
-	add_child(_death_layer)
+	_death_layer = RunSummary.show_death(self)
 
 
 ## 图边界物理墙（层 1）：玩家和敌人都撞得住，红框只是它的可视化。

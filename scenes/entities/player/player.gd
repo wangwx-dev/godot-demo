@@ -44,6 +44,11 @@ func effective_dodge_cooldown() -> float:
 	return maxf(dodge_cooldown + RunState.stat_sum(UpgradeData.Effect.SKILL_COOLDOWN_ADD), 0.5)
 
 
+## 翻滚冷却剩余占比（HUD 技能图标用）：1=刚用完，0=可用。
+func dodge_cd_fraction() -> float:
+	return clampf(_dodge_cooldown_timer / effective_dodge_cooldown(), 0.0, 1.0)
+
+
 func _physics_process(delta: float) -> void:
 	if _dead:
 		return
@@ -99,8 +104,19 @@ func take_damage(amount: int) -> void:
 	if _dead or is_invulnerable():
 		return
 	_hit_invuln_timer = 0.5
+	_shake_camera()
 	if RunState.apply_damage(amount):
 		_die()
+
+
+## 受击短震屏（ui-design 战斗反馈；红晕由 PressureHud 出）。
+func _shake_camera() -> void:
+	var camera: Camera2D = $Camera2D
+	var tween: Tween = create_tween()
+	for i in 3:
+		tween.tween_property(camera, "offset",
+				Vector2(randf_range(-7.0, 7.0), randf_range(-5.0, 5.0)), 0.04)
+	tween.tween_property(camera, "offset", Vector2.ZERO, 0.06)
 
 
 func _die() -> void:

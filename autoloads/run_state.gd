@@ -30,6 +30,7 @@ var backpack: Array[LootData] = []
 var upgrades: Dictionary = {}  ## UpgradeData → 已拿层数
 var weapon_levels: Dictionary = {}  ## WeaponData → 等级（起始 1，专属卡 +1）
 var assault_triggered: bool = false
+var kills: int = 0  ## 本局击杀数（结算画面用）
 
 var max_hp: int = 100
 var hp: int = 100
@@ -52,6 +53,7 @@ func reset() -> void:
 	upgrades.clear()
 	weapon_levels.clear()
 	assault_triggered = false
+	kills = 0
 	max_hp = 100
 	hp = max_hp
 	level = 1

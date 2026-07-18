@@ -26,7 +26,9 @@ func _ready() -> void:
 	_build_walls()
 	_menu = LevelUpMenu.new()
 	add_child(_menu)
-	add_child(EconomyHud.new())
+	var hud: GameHud = GameHud.new()
+	hud.battle_mode = false
+	add_child(hud)
 	_place_vehicles()
 	queue_redraw()
 

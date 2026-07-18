@@ -119,6 +119,7 @@ func take_damage(amount: int, knockback: Vector2 = Vector2.ZERO) -> void:
 	knockback_velocity += knockback
 	if hp <= 0:
 		state = State.DIE
+		RunState.kills += 1
 		collision_shape.set_deferred("disabled", true)
 		_on_death()
 

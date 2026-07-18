@@ -1,11 +1,14 @@
 class_name PressureHud
 extends CanvasLayer
-## M2 临时压力 UI（mvp-plan：简单数字/色条即可，正式警戒条归 M7）。
-## Heat 色条 + 死线倒计时（最后 60s 变红+心跳、最后 10s 报数）+ 涌潮方向性红光+低吼。
+## 威胁反馈层（M2 起，M7 起数字/条移交 GameHud 警戒条，本层只管"表现"）：
+## 涌潮方向性红光+低吼、末 60s 心跳渐强、末 10s 报数音、崩溃常驻红晕、
+## 受击红晕闪现、低血（<30%）常驻淡红晕（ui-design 战斗反馈）。
 
 const GROWL := preload("res://assets/audio/sfx/surge_growl.wav")
 const HEARTBEAT := preload("res://assets/audio/sfx/heartbeat.wav")
 const TICK := preload("res://assets/audio/sfx/countdown_tick.wav")
+
+const LOW_HP_RATIO: float = 0.3
 
 var director: HeatDirector
 
@@ -13,9 +16,9 @@ var _surge_glow_timer: float = 0.0
 var _surge_direction: Vector2 = Vector2.RIGHT
 var _heartbeat_timer: float = 0.0
 var _last_countdown_second: int = -1
+var _hit_flash: float = 0.0
+var _last_hp: int = -1
 
-var _heat_label: Label
-var _time_label: Label
 var _surge_label: Label
 var _glow: Control
 var _audio: AudioStreamPlayer
@@ -33,50 +36,33 @@ func _ready() -> void:
 	_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_glow.draw.connect(_draw_glow)
 	add_child(_glow)
-	var box: VBoxContainer = VBoxContainer.new()
-	box.position = Vector2(760, 8)
-	add_child(box)
-	_heat_label = Label.new()
-	_heat_label.add_theme_font_size_override("font_size", 22)
-	box.add_child(_heat_label)
-	_time_label = Label.new()
-	_time_label.add_theme_font_size_override("font_size", 30)
-	box.add_child(_time_label)
 	_surge_label = Label.new()
 	_surge_label.add_theme_font_size_override("font_size", 42)
 	_surge_label.add_theme_color_override("font_color", Color(1.0, 0.25, 0.15))
+	_surge_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_surge_label.add_theme_constant_override("outline_size", 6)
 	_surge_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_surge_label.position = Vector2(-130, 120)
 	_surge_label.visible = false
 	add_child(_surge_label)
 	_audio = AudioStreamPlayer.new()
 	add_child(_audio)
+	_last_hp = RunState.hp
+	EventBus.player_health_changed.connect(_on_health_changed)
+
+
+func _on_health_changed(current: int, _max_value: int) -> void:
+	if current < _last_hp:
+		_hit_flash = 0.35
+	_last_hp = current
 
 
 func _process(delta: float) -> void:
+	_hit_flash = maxf(_hit_flash - delta, 0.0)
 	if director == null or not is_instance_valid(director):
 		return
-	# Heat：数字 + 阶段色（绿→黄→红→深红崩溃，对齐 ui-design 四态）
-	var heat: float = director.heat
-	var color: Color
-	if director.collapse:
-		color = Color(0.75, 0.1, 0.1)
-		_heat_label.text = "!! 崩溃 !!"
-	else:
-		if heat < 4.0:
-			color = Color(0.4, 0.8, 0.4)
-		elif heat < 8.0:
-			color = Color(0.9, 0.8, 0.3)
-		else:
-			color = Color(0.95, 0.4, 0.25)
-		_heat_label.text = "警戒 %d" % floori(heat)
-	_heat_label.add_theme_color_override("font_color", color)
-	# 死线倒计时
 	var left: float = director.time_left()
-	_time_label.text = "%d:%02d" % [floori(left / 60.0), floori(left) % 60]
 	var final_minute: bool = left <= 60.0 and not director.collapse
-	_time_label.add_theme_color_override("font_color",
-			Color(0.95, 0.25, 0.2) if final_minute or director.collapse else Color(0.85, 0.85, 0.8))
 	if final_minute:
 		# 心跳渐强：60s 每 1.2s 一次 → 最后 10s 每 0.5s
 		_heartbeat_timer -= delta
@@ -86,14 +72,12 @@ func _process(delta: float) -> void:
 		if left <= 10.0 and floori(left) != _last_countdown_second:
 			_last_countdown_second = floori(left)
 			_play(TICK, 0.0)
-	# 涌潮红光淡出 + 崩溃常驻红晕
+	# 红光淡出 / 崩溃常驻 / 受击与低血红晕都要重绘
 	if _surge_glow_timer > 0.0:
 		_surge_glow_timer -= delta
 		if _surge_glow_timer <= 0.0:
 			_surge_label.visible = false
-		_glow.queue_redraw()
-	elif director.collapse:
-		_glow.queue_redraw()
+	_glow.queue_redraw()
 
 
 func _on_surge_incoming(direction: Vector2) -> void:
@@ -110,19 +94,21 @@ func _direction_name(direction: Vector2) -> String:
 	return "↓ 下方" if direction.y > 0.0 else "↑ 上方"
 
 
-## 涌潮来向的屏幕边缘红色渐变条 + 崩溃常驻红晕（正式 shader 版归 M7）。
+## 屏幕边缘反馈合成：崩溃常驻深红呼吸 > 受击闪现红晕 > 低血常驻淡红晕 > 涌潮方向红光。
 func _draw_glow() -> void:
 	var size: Vector2 = _glow.size
 	# 崩溃期：四边常驻深红呼吸晕——整个屏幕都在告诉你"该跑了"
 	if director != null and is_instance_valid(director) and director.collapse:
 		var pulse: float = 0.30 + 0.12 * sin(Time.get_ticks_msec() / 350.0)
-		var edge_color: Color = Color(0.7, 0.05, 0.05, pulse)
-		var edge_fade: Color = Color(0.7, 0.05, 0.05, 0.0)
-		var edge: float = 140.0
-		_draw_gradient_rect(Rect2(0, 0, edge, size.y), edge_color, edge_fade, true)
-		_draw_gradient_rect(Rect2(size.x - edge, 0, edge, size.y), edge_fade, edge_color, true)
-		_draw_gradient_rect(Rect2(0, 0, size.x, edge), edge_color, edge_fade, false)
-		_draw_gradient_rect(Rect2(0, size.y - edge, size.x, edge), edge_fade, edge_color, false)
+		_draw_vignette(size, Color(0.7, 0.05, 0.05), pulse, 140.0)
+	# 受击红晕：短促一闪（ui-design 战斗反馈）
+	if _hit_flash > 0.0:
+		_draw_vignette(size, Color(0.9, 0.08, 0.05), 0.55 * (_hit_flash / 0.35), 110.0)
+	# 低血常驻淡红晕："该去休整了"不用文字说
+	var hp_ratio: float = float(RunState.hp) / maxf(RunState.max_hp, 1)
+	if hp_ratio <= LOW_HP_RATIO and RunState.hp > 0:
+		var breathe: float = 0.16 + 0.08 * sin(Time.get_ticks_msec() / 300.0)
+		_draw_vignette(size, Color(0.75, 0.1, 0.08), breathe, 90.0)
 	if _surge_glow_timer <= 0.0:
 		return
 	# 涌潮预警：加宽加亮 + 快脉动
@@ -141,6 +127,16 @@ func _draw_glow() -> void:
 			_draw_gradient_rect(Rect2(0, size.y - thickness, size.x, thickness), fade, color, false)
 		else:
 			_draw_gradient_rect(Rect2(0, 0, size.x, thickness), color, fade, false)
+
+
+## 四边红晕（受击/低血/崩溃共用）。
+func _draw_vignette(size: Vector2, base: Color, alpha: float, edge: float) -> void:
+	var edge_color: Color = Color(base.r, base.g, base.b, alpha)
+	var edge_fade: Color = Color(base.r, base.g, base.b, 0.0)
+	_draw_gradient_rect(Rect2(0, 0, edge, size.y), edge_color, edge_fade, true)
+	_draw_gradient_rect(Rect2(size.x - edge, 0, edge, size.y), edge_fade, edge_color, true)
+	_draw_gradient_rect(Rect2(0, 0, size.x, edge), edge_color, edge_fade, false)
+	_draw_gradient_rect(Rect2(0, size.y - edge, size.x, edge), edge_fade, edge_color, false)
 
 
 func _draw_gradient_rect(rect: Rect2, from: Color, to: Color, horizontal: bool) -> void:

@@ -12,6 +12,8 @@ var _label: Label
 var _overlay_visible: bool = true
 var _shot_frame: int = 0  # --shot=N：第 N 帧存主视口截图后退出（无人值守 QA）
 var _frame_count: int = 0
+var _start_map: String = ""  # --start-map=shop|rest|assault：起局直接传送（无人值守 QA）
+var _die_at: int = 0  # --die-at=N：第 N 帧自毁（结算画面无人值守 QA）
 
 
 func _ready() -> void:
@@ -22,13 +24,18 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--shot="):
 			_shot_frame = int(arg.trim_prefix("--shot="))
+		elif arg.begins_with("--start-map="):
+			_start_map = arg.trim_prefix("--start-map=")
+		elif arg.begins_with("--die-at="):
+			_die_at = int(arg.trim_prefix("--die-at="))
 		elif arg.begins_with("--route-audit="):
 			# 路线审计：批量种子模拟整局候选流，验证保底与同种子复现（无头 QA）
 			_route_audit.call_deferred(int(arg.trim_prefix("--route-audit=")))
 	var layer: CanvasLayer = CanvasLayer.new()
 	layer.layer = 100
 	_label = Label.new()
-	_label.position = Vector2(8, 8)
+	_label.position = Vector2(8, 130)  # 让开正式 HUD 生存簇（M7）
+	_label.add_theme_font_size_override("font_size", 12)
 	_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.5))
 	layer.add_child(_label)
 	add_child(layer)
@@ -36,6 +43,25 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	_frame_count += 1
+	if _start_map != "" and get_tree().current_scene != null:
+		# 起局传送（--start-map）：商店 QA 顺带塞满测试物资走兑换播报
+		var target: String = _start_map
+		_start_map = ""
+		if target == "shop":
+			RunState.try_add_loot(load("res://resources/loot/loot_canned_food.tres"))
+			RunState.try_add_loot(load("res://resources/loot/loot_canned_food.tres"))
+			RunState.try_add_loot(load("res://resources/loot/loot_medicine.tres"))
+			RunState.try_add_loot(load("res://resources/loot/loot_gold_bar.tres"))
+			MapFlow.travel(get_tree(), RunState.MapType.SHOP)
+		elif target == "rest":
+			MapFlow.travel(get_tree(), RunState.MapType.REST)
+		elif target == "assault":
+			MapFlow.travel(get_tree(), RunState.MapType.ASSAULT)
+	if _die_at > 0 and _frame_count >= _die_at:
+		_die_at = 0
+		var qa_player: Player = get_tree().get_first_node_in_group("player") as Player
+		if qa_player != null:
+			qa_player.take_damage(9999)
 	if _shot_frame > 0 and _frame_count >= _shot_frame:
 		_shot_frame = 0
 		var img: Image = get_viewport().get_texture().get_image()
@@ -74,6 +100,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			RunState.add_gold(100)
 		KEY_F3:
 			RunState.advance_day()
+		KEY_F5:
+			# QA 传送：商店图（M7 验收动线）
+			MapFlow.travel(get_tree(), RunState.MapType.SHOP)
+		KEY_F6:
+			# QA 传送：休整图
+			MapFlow.travel(get_tree(), RunState.MapType.REST)
+		KEY_F7:
+			# QA 传送：总攻图（M8 验收动线）
+			MapFlow.travel(get_tree(), RunState.MapType.ASSAULT)
+		KEY_F8:
+			# QA 自毁：验证死亡结算画面
+			var player: Player = get_tree().get_first_node_in_group("player") as Player
+			if player != null:
+				player.take_damage(9999)
 
 
 ## ---- 路线审计（--route-audit=N）----
