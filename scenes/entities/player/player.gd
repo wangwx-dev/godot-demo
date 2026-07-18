@@ -71,6 +71,7 @@ func _physics_process(delta: float) -> void:
 		_hit_invuln_timer = maxf(_hit_invuln_timer, dodge_invuln)
 		_dodge_velocity = input_dir.normalized() * (dodge_distance / DODGE_DURATION)
 		velocity = _dodge_velocity
+		Sfx.play("dodge_roll", -8.0)
 		move_and_slide()
 		return
 
@@ -105,6 +106,7 @@ func take_damage(amount: int) -> void:
 		return
 	_hit_invuln_timer = 0.5
 	_shake_camera()
+	Sfx.play("player_hurt", -4.0)
 	if RunState.apply_damage(amount):
 		_die()
 

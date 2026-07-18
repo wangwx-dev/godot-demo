@@ -74,6 +74,7 @@ func _physics_process(delta: float) -> void:
 	)
 	if _dwelling:
 		progress += delta
+		Sfx.play("chest_loop", -12.0, 380)
 		if progress >= effective_dwell_time():
 			_produce()
 	if _dwelling != was_dwelling or _dwelling:
@@ -84,6 +85,7 @@ func _produce() -> void:
 	done = true
 	_dwelling = false
 	_box.texture = load("res://assets/sprites/pickups/itembox_broken.png")
+	Sfx.play("chest_open", -6.0)
 	var rng: RandomNumberGenerator = RunRng.stream("loot")
 	match kind:
 		Kind.SUPPLY:

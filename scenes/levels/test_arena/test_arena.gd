@@ -76,6 +76,7 @@ func _ready() -> void:
 	_place_vehicles()
 	_place_elites()
 	EventBus.player_died.connect(_on_player_died)
+	Sfx.bgm("battle")
 	queue_redraw()
 
 

@@ -29,6 +29,7 @@ func _ready() -> void:
 	var hud: GameHud = GameHud.new()
 	hud.battle_mode = false
 	add_child(hud)
+	Sfx.bgm("safe")
 	_place_vehicles()
 	queue_redraw()
 

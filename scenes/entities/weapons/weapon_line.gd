@@ -25,4 +25,5 @@ func _try_attack() -> bool:
 	# 枪口焰：单帧短闪，贴在出膛方向
 	Fx.single(get_tree().current_scene, "weapons/muzzle_flash.png",
 			global_position + direction * 18.0, 0.07, 1.4, direction.angle())
+	Sfx.play("pistol_shot", -8.0, 90)
 	return true

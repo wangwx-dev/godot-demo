@@ -8,6 +8,7 @@ const EXPLODE_DAMAGE: int = 25
 
 
 func _on_death() -> void:
+	Sfx.play("bloater_warning", -5.0)
 	var tween: Tween = create_tween()
 	tween.tween_property(body, "scale", body.scale * 1.35, EXPLODE_DELAY)
 	tween.parallel().tween_property(body, "modulate", Color(1.0, 0.45, 0.15), EXPLODE_DELAY)
@@ -21,6 +22,7 @@ func _explode() -> void:
 	flash.global_position = global_position
 	Fx.one_shot(get_parent(), "weapons/explosion", 6, global_position, 15.0, 3.5)
 	Fx.blood_decal(get_parent(), global_position, 2.0)
+	Sfx.play("bloater_explode", -3.0)
 	var player: Player = get_tree().get_first_node_in_group("player") as Player
 	if player != null and global_position.distance_to(player.global_position) <= EXPLODE_RADIUS:
 		player.take_damage(EXPLODE_DAMAGE)

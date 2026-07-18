@@ -48,8 +48,10 @@ func _collect() -> void:
 	match kind:
 		Kind.XP:
 			RunState.add_xp(amount)
+			Sfx.play("pickup_xp", -14.0, 50)
 		Kind.GOLD:
 			RunState.add_gold(amount)
+			Sfx.play("pickup_coin", -10.0, 60)
 		Kind.UPGRADE:
 			# 蓝档强化拾取物：开一次蓝卡限定三选一（enemy-design 精英掉落）
 			var menu: LevelUpMenu = get_tree().get_first_node_in_group("level_up_menu") as LevelUpMenu

@@ -8,7 +8,11 @@ const INTERACT_RADIUS: float = 70.0
 const BOARD_TIME: float = 1.5
 
 var destination: int = RunState.MapType.BATTLE
-var discovered: bool = false  ## FogOverlay 光圈内置 true → 迷你图常驻绿点
+var discovered: bool = false:  ## FogOverlay 光圈内置 true → 迷你图常驻绿点
+	set(value):
+		if value and not discovered:
+			Sfx.play("vehicle_found", -6.0)
+		discovered = value
 
 var _progress: float = 0.0
 var _player: Player
@@ -28,6 +32,7 @@ func _physics_process(delta: float) -> void:
 		_progress += delta
 		if _progress >= BOARD_TIME:
 			set_physics_process(false)
+			Sfx.play("vehicle_depart", -4.0)
 			MapFlow.travel(get_tree(), destination)
 			return
 	else:

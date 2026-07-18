@@ -63,6 +63,7 @@ func _ready() -> void:
 	hud.boss = _boss  # 警戒条位置换 Boss 血条（ui-design 总攻 HUD）
 	add_child(hud)
 	EventBus.player_died.connect(_on_player_died)
+	Sfx.bgm("assault")
 
 
 ## 尸巢督军：三词缀超级精英（狂暴+召唤+坚韧），底板再放大。

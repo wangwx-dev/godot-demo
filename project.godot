@@ -21,6 +21,7 @@ EventBus="*res://autoloads/event_bus.gd"
 RunRng="*res://autoloads/run_rng.gd"
 RunState="*res://autoloads/run_state.gd"
 Debug="*res://autoloads/debug.gd"
+Sfx="*res://autoloads/sfx.gd"
 
 [display]
 

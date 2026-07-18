@@ -29,6 +29,7 @@ func _ready() -> void:
 	var hud: GameHud = GameHud.new()
 	hud.battle_mode = false
 	add_child(hud)
+	Sfx.bgm("safe")
 	_setup_broadcast()
 	_place_vehicles()
 	queue_redraw()
@@ -85,6 +86,7 @@ func _advance_broadcast(delta: float) -> void:
 	label.modulate.a = 0.0
 	_broadcast_box.add_child(label)
 	create_tween().tween_property(label, "modulate:a", 1.0, 0.25)
+	Sfx.play("shop_exchange_tick", -8.0, 100)
 
 
 ## ---- 货架（休整图站点同款交互：站进圈按住 E） ----

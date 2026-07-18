@@ -41,4 +41,5 @@ func _try_attack() -> bool:
 	# 落地爆燃 + 烟：燃烧瓶砸中的瞬间反馈
 	Fx.one_shot(get_tree().current_scene, "weapons/explosion", 6, zone.global_position, 15.0, 2.5)
 	Fx.one_shot(get_tree().current_scene, "weapons/smoke", 6, zone.global_position + Vector2(0, -14), 9.0, 2.0)
+	Sfx.play("molotov_ignite", -4.0)
 	return true

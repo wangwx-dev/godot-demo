@@ -41,6 +41,7 @@ func _try_attack() -> bool:
 		if absf(_swing_direction.angle_to(to_enemy)) <= half_arc:
 			enemy.take_damage(damage, to_enemy.normalized() * knockback * 6.0)
 	_swing_age = 0.0
+	Sfx.play("bat_swing", -6.0)
 	# 挥砍拖影帧：甩向挥击方向（弧形淡影仍保留作命中范围提示）
 	Fx.one_shot(get_tree().current_scene, "weapons/slash", 4,
 			global_position + _swing_direction * _swing_range * 0.55,

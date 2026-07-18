@@ -205,6 +205,7 @@ func _make_card(upgrade: UpgradeData) -> Button:
 
 
 func _on_card_picked(upgrade: UpgradeData) -> void:
+	Sfx.play("ui_confirm", -6.0)
 	RunState.apply_upgrade(upgrade)
 	_close()
 

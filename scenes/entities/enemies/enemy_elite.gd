@@ -34,6 +34,7 @@ func _ready() -> void:
 	data.sprite_scale *= 1.5
 	super()
 	_max_hp = hp
+	Sfx.play("elite_spawn", -4.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -82,6 +83,7 @@ func _summon() -> void:
 
 func _on_death() -> void:
 	EventBus.elite_killed.emit()
+	Sfx.play("elite_down", -4.0)
 	var pool: ObjectPool = get_tree().get_first_node_in_group("pickup_pool") as ObjectPool
 	if pool != null:
 		var coin: Pickup = pool.acquire() as Pickup
