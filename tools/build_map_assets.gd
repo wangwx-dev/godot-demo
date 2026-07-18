@@ -174,15 +174,15 @@ func _ground_tile(rng: RandomNumberGenerator, style: String) -> String:
 	var r: float = rng.randf()
 	match style:
 		"grass":
-			if r < 0.42:
+			if r < 0.45:
 				return "grass_a"
-			if r < 0.68:
+			if r < 0.72:
 				return "grass_b"
-			if r < 0.82:
+			if r < 0.87:
 				return "grass_dry_a"
-			if r < 0.92:
+			if r < 0.97:
 				return "grass_dry_b"
-			return "dirt_a" if r < 0.97 else "dirt_twigs_a"
+			return "dirt_twigs_a"  # 只留枯枝点缀，不混整块泥土（棋盘感反馈）
 		"scorched":
 			if r < 0.50:
 				return "dirt_a"
@@ -442,7 +442,7 @@ func _build_assault_arena() -> void:
 	for y in range(13, 28):
 		for x in range(2, 10):
 			_g(ctx, x, y, "road_plain")
-	_prop(ctx, "wreck_white_top", 6.0, 15.5, true)
+	_prop(ctx, "vehicle_0164", 6.0, 15.5, true)  # 接应车：完好车头朝上（识别表提取），随时能走
 	_prop(ctx, "barrier_striped", 10.5, 14.0)
 	_prop(ctx, "barrier_striped", 10.5, 26.0)
 	_prop(ctx, "traffic_cone", 9.5, 17.5)

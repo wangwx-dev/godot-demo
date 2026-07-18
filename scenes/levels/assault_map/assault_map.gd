@@ -73,6 +73,7 @@ func _spawn_boss() -> void:
 	boss_data.max_hp = roundi(WALKER_DATA.max_hp * BOSS_HP_BASE_MULT)
 	boss_data.contact_damage = 15
 	boss_data.sprite_scale = 1.4  # 精英 ×1.5 后 ≈2.1，Boss 的块头
+	boss_data.outline_color = Color(0.42, 0.2, 0.5)  # 紫黑色调——Boss 一眼有别于杂兵
 	_boss = ELITE_SCENE.instantiate()
 	_boss.data = boss_data
 	_boss.affixes = [EnemyElite.Affix.FRENZY, EnemyElite.Affix.SUMMON, EnemyElite.Affix.TOUGH] as Array[int]

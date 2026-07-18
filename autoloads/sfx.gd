@@ -49,14 +49,16 @@ func play(sfx_name: String, volume_db: float = 0.0, throttle_ms: int = 70) -> vo
 	player.play()
 
 
-## 切 BGM（battle/safe/assault；"" = 停）。同名不重启。
-func bgm(bgm_name: String, volume_db: float = -10.0) -> void:
+## 切 BGM（battle/safe/assault；"" = 停）。同名不重启。正式曲目 .mp3 优先，合成占位 .wav 兜底。
+func bgm(bgm_name: String, volume_db: float = -12.0) -> void:
 	if _bgm_name == bgm_name:
 		return
 	_bgm_name = bgm_name
 	if bgm_name.is_empty():
 		_bgm_player.stop()
 		return
-	_bgm_player.stream = load(BGM_DIR + "bgm_" + bgm_name + ".wav")
+	var base: String = BGM_DIR + "bgm_" + bgm_name
+	var path: String = base + ".mp3" if ResourceLoader.exists(base + ".mp3") else base + ".wav"
+	_bgm_player.stream = load(path)
 	_bgm_player.volume_db = volume_db
 	_bgm_player.play()

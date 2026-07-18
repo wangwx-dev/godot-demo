@@ -46,3 +46,10 @@ TakWolf 等（缝合像素字体，SIL OFL 1.1——随游戏分发时保留 ass
   基于 Stephen Challener (Redshrike) 的 LPC 男性基础。许可证：CC-BY-SA 3.0 / GPL 3.0。
 
 > 注意：CC-BY-SA 素材要求署名与相同方式共享（对美术资产层面）。发布时本 CREDITS 须随游戏附带。
+
+## 音乐（2026-07-18 F1 正式 BGM）
+
+- "Darkest Child"（战斗图）、"Ossuary 5 - Rest"（休整/商店图）、"Five Armies"（总攻图）
+  Kevin MacLeod (incompetech.com)
+  Licensed under Creative Commons: By Attribution 4.0
+  https://creativecommons.org/licenses/by/4.0/

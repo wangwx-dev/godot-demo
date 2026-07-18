@@ -21,10 +21,9 @@ var _player: Player
 func _ready() -> void:
 	add_to_group("vehicles")
 	z_index = 5
-	# 像素车贴图（试玩反馈：几何画法与全局画风不符）——与总攻图接应车同款
+	# 完好像素车（识别表提取 vehicle_0170 侧视角）——载具是"能开走的希望"，不能用残骸
 	var sprite: Sprite2D = Sprite2D.new()
-	sprite.texture = load("res://assets/sprites/environment/props/wreck_white_top.png")
-	sprite.scale = Vector2.ONE * 1.25
+	sprite.texture = load("res://assets/sprites/environment/props/vehicle_0170.png")
 	add_child(sprite)
 
 

@@ -8,6 +8,11 @@ extends EnemyBase
 enum Affix { FRENZY, SUMMON, TOUGH }
 
 const AFFIX_NAMES: Array[String] = ["狂暴", "召唤", "坚韧"]
+const AFFIX_ICON_PATHS: Array[String] = [
+	"res://assets/sprites/ui/affix_frenzy.png",
+	"res://assets/sprites/ui/affix_summon.png",
+	"res://assets/sprites/ui/affix_tough.png",
+]
 const AGGRO_RADIUS: float = 480.0
 const SUMMON_INTERVAL: float = 6.0
 const SUMMON_COUNT: int = 3
@@ -97,13 +102,15 @@ func _draw() -> void:
 	if state == State.DIE:
 		return
 	var half_w: float = 30.0
-	var y: float = -BODY_RADIUS * data.sprite_scale - 18.0
+	var y: float = -BODY_RADIUS * data.sprite_scale - 34.0
 	# 血条（普通尸不显示，精英显示——地位可读）
 	draw_rect(Rect2(-half_w, y, half_w * 2.0, 6.0), Color(0.1, 0.1, 0.1, 0.85))
 	draw_rect(Rect2(-half_w, y, half_w * 2.0 * (float(hp) / _max_hp), 6.0), Color(0.85, 0.25, 0.2))
-	# 词缀读题：头顶文字（正式版图标化，asset-list）
-	var names: Array[String] = []
-	for affix in affixes:
-		names.append(AFFIX_NAMES[affix])
-	draw_string(ThemeDB.fallback_font, Vector2(-half_w, y - 6.0),
-			" ".join(names), HORIZONTAL_ALIGNMENT_CENTER, half_w * 2.0, 13, Color(0.95, 0.75, 0.3))
+	# 词缀读题：头顶图标（asset-list 词缀图标行闭环）
+	var icon_size: float = 18.0
+	var total_w: float = affixes.size() * (icon_size + 4.0) - 4.0
+	for i in affixes.size():
+		var icon: Texture2D = load(AFFIX_ICON_PATHS[affixes[i]])
+		draw_texture_rect(icon, Rect2(
+				Vector2(-total_w / 2.0 + i * (icon_size + 4.0), y - icon_size - 4.0),
+				Vector2(icon_size, icon_size)), false)

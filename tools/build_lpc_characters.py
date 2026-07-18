@@ -55,18 +55,24 @@ def tint(img: Image.Image, mult) -> Image.Image:
     return out
 
 
-def build_survivor() -> None:
-    base = Image.new("RGBA", (576, 256), (0, 0, 0, 0))
+def compose(anim: str, out_name: str, size: tuple) -> None:
+    base = Image.new("RGBA", size, (0, 0, 0, 0))
     for name, path, mult in LAYERS:
-        f = LAYER_DIR / f"{name}.png"
-        fetch(f"{RAW}/{path}", f)
+        f = LAYER_DIR / f"{name}_{anim}.png"
+        fetch(f"{RAW}/{path.replace('walk.png', anim + '.png')}", f)
         layer = Image.open(f).convert("RGBA")
         if mult is not None:
             layer = tint(layer, mult)
         base.alpha_composite(layer)
-    out = REPO_ROOT / "assets" / "sprites" / "characters" / "lpc_survivor_walk.png"
+    out = REPO_ROOT / "assets" / "sprites" / "characters" / out_name
     base.save(out)
     print(f"[lpc] {out.relative_to(REPO_ROOT)}")
+
+
+def build_survivor() -> None:
+    # 走路（9 帧 x 4 向）+ 挥砍（6 帧 x 4 向，球棒攻击动作用）
+    compose("walk", "lpc_survivor_walk.png", (576, 256))
+    compose("slash", "lpc_survivor_slash.png", (384, 256))
 
 
 def build_zombie() -> None:

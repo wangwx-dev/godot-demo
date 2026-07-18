@@ -58,6 +58,24 @@ static func dir_frames(sheet_path: String, fps: float = 10.0) -> SpriteFrames:
 	return sf
 
 
+## 向已有 SpriteFrames 补挂动作表（如 slash 6 帧 x 4 向）→ <prefix>_<dir> 四动画（不循环）
+static func add_action(sf: SpriteFrames, sheet_path: String, prefix: String, cols: int, fps: float = 16.0) -> void:
+	if sf.has_animation(prefix + "_up"):
+		return
+	var tex: Texture2D = load(SPRITE_ROOT + sheet_path)
+	assert(tex != null, "缺少帧图：" + sheet_path)
+	for row in 4:
+		var anim: String = prefix + "_" + DIR_NAMES[row]
+		sf.add_animation(anim)
+		sf.set_animation_speed(anim, fps)
+		sf.set_animation_loop(anim, false)
+		for col in cols:
+			var frame: AtlasTexture = AtlasTexture.new()
+			frame.atlas = tex
+			frame.region = Rect2(col * 64, row * 64, 64, 64)
+			sf.add_frame(anim, frame)
+
+
 ## 向量 → LPC 方向名（主导轴决定）
 static func dir_name(v: Vector2) -> String:
 	if absf(v.x) >= absf(v.y):

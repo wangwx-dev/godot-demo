@@ -9,9 +9,9 @@ const BAR_W: float = 240.0
 const ALERT_W: float = 170.0  # 与迷你图同宽对齐（Minimap.MAP_SIZE_PX）
 const LOW_HP_RATIO: float = 0.3
 
-## 武器图标：按攻击几何映射（正式 24×24 图标未产，先用素材包内代用图，asset-list 已注）
+## 武器图标：按攻击几何映射（球棒为自绘像素图标，其余用素材包代用图）
 const GEOMETRY_ICONS: Dictionary = {
-	WeaponData.Geometry.ARC: "res://assets/sprites/pickups/icon_knife.png",
+	WeaponData.Geometry.ARC: "res://assets/sprites/ui/icon_bat.png",
 	WeaponData.Geometry.LINE: "res://assets/sprites/pickups/icon_pistol.png",
 	WeaponData.Geometry.AREA: "res://assets/sprites/pickups/bottle.png",
 }

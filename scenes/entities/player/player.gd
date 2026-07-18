@@ -21,16 +21,28 @@ var _dodge_timer: float = 0.0
 var _dodge_velocity: Vector2 = Vector2.ZERO
 var _dead: bool = false
 var _facing: String = "down"
+var _attack_timer: float = 0.0
 
 @onready var body: AnimatedSprite2D = $Body
 
 
 func _ready() -> void:
 	add_to_group("player")
-	# LPC 幸存者（tools/build_lpc_characters.py 合成）：四方向走路 + 站立
+	# LPC 幸存者（tools/build_lpc_characters.py 合成）：四方向走路+站立+挥砍
 	body.sprite_frames = Fx.dir_frames("characters/lpc_survivor_walk.png", 11.0)
+	Fx.add_action(body.sprite_frames, "characters/lpc_survivor_slash.png", "slash", 6, 18.0)
 	body.offset = Vector2(0, -18)  # 脚底贴近碰撞中心（俯视 3/4 视角）
 	body.play("idle_down")
+
+
+## 武器侧调用：朝挥击方向播挥砍动作（球棒）。
+func play_attack(direction: Vector2) -> void:
+	if _dead:
+		return
+	_facing = Fx.dir_name(direction)
+	_attack_timer = 0.3
+	body.speed_scale = 1.0
+	body.play("slash_" + _facing)
 
 
 ## 强化聚合后的实效属性（每帧读，叠层即时生效）。
@@ -59,7 +71,7 @@ func _physics_process(delta: float) -> void:
 	body.modulate.a = 0.5 if is_invulnerable() else 1.0
 
 	var input_dir: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	_update_walk_anim(input_dir)
+	_update_walk_anim(input_dir, delta)
 
 	if _dodge_timer > 0.0:
 		_dodge_timer -= delta
@@ -85,8 +97,11 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
-## 四方向走路动画：主导轴定朝向，停下切站立帧，移速联动帧率。
-func _update_walk_anim(input_dir: Vector2) -> void:
+## 四方向动画：攻击动作优先播完，其余按主导轴走路/站立，移速联动帧率。
+func _update_walk_anim(input_dir: Vector2, delta: float) -> void:
+	if _attack_timer > 0.0:
+		_attack_timer -= delta
+		return
 	if input_dir != Vector2.ZERO:
 		_facing = Fx.dir_name(input_dir)
 	var moving: bool = input_dir != Vector2.ZERO or _dodge_timer > 0.0
