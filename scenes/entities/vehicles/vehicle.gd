@@ -21,6 +21,11 @@ var _player: Player
 func _ready() -> void:
 	add_to_group("vehicles")
 	z_index = 5
+	# 像素车贴图（试玩反馈：几何画法与全局画风不符）——与总攻图接应车同款
+	var sprite: Sprite2D = Sprite2D.new()
+	sprite.texture = load("res://assets/sprites/environment/props/wreck_white_top.png")
+	sprite.scale = Vector2.ONE * 1.25
+	add_child(sprite)
 
 
 func _physics_process(delta: float) -> void:
@@ -42,21 +47,16 @@ func _physics_process(delta: float) -> void:
 
 func _draw() -> void:
 	var color: Color = MapFlow.type_color(destination)
-	# 车身 + 车窗 + 车轮（占位表现，正式皮肤按目的地类型区分——内容期）
-	draw_rect(Rect2(-34, -18, 68, 36), Color(0.25, 0.27, 0.3))
-	draw_rect(Rect2(-34, -18, 68, 36), color, false, 3.0)
-	draw_rect(Rect2(-14, -12, 28, 10), Color(0.5, 0.65, 0.7, 0.8))
-	draw_circle(Vector2(-20, 20), 7.0, Color(0.12, 0.12, 0.12))
-	draw_circle(Vector2(20, 20), 7.0, Color(0.12, 0.12, 0.12))
-	# 目的地牌（MVP 文字牌即可）
-	draw_string(ThemeDB.fallback_font, Vector2(-60, -30),
+	# 目的地牌：类型色小旗 + 文字（车身是贴图子节点）
+	draw_rect(Rect2(-42, -46, 84, 20), Color(0.08, 0.08, 0.1, 0.72))
+	draw_rect(Rect2(-42, -46, 84, 20), color, false, 2.0)
+	draw_string(ThemeDB.fallback_font, Vector2(-40, -31),
 			"→ %s" % MapFlow.type_name(destination),
-			HORIZONTAL_ALIGNMENT_CENTER, 120, 15, color)
-	var near: bool = _player != null and is_instance_valid(_player) \
-			and global_position.distance_to(_player.global_position) <= INTERACT_RADIUS
+			HORIZONTAL_ALIGNMENT_CENTER, 80, 14, color)
+	var near: bool = _player != null and is_instance_valid(_player) 			and global_position.distance_to(_player.global_position) <= INTERACT_RADIUS
 	if near:
-		draw_string(ThemeDB.fallback_font, Vector2(-60, 46),
+		draw_string(ThemeDB.fallback_font, Vector2(-60, 52),
 				"按住 E 出发", HORIZONTAL_ALIGNMENT_CENTER, 120, 13, Color(0.9, 0.9, 0.85))
 	if _progress > 0.0:
-		draw_arc(Vector2.ZERO, 42.0, -PI / 2.0,
+		draw_arc(Vector2.ZERO, 46.0, -PI / 2.0,
 				-PI / 2.0 + TAU * (_progress / BOARD_TIME), 24, Color(0.95, 0.95, 0.9), 4.0)

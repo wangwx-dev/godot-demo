@@ -26,7 +26,9 @@ var _dead: bool = false
 
 func _ready() -> void:
 	add_to_group("player")
-	body.sprite_frames = Fx.frames("characters/player_walk", 9, 10.0)
+	# 红夹克皮肤（variant 帧图 0/3/6 为红衣三帧循环）；放大 1.55——角色不必被 1 格框死
+	body.sprite_frames = Fx.frames_indexed("characters/player_variant", [0, 3, 6], 8.0)
+	body.scale = Vector2.ONE * 1.55
 	body.play("default")
 	body.pause()
 

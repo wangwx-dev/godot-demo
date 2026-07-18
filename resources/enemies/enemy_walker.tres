@@ -11,6 +11,6 @@ contact_damage = 10
 damage_interval = 0.5
 xp_drop = 1
 gold_chance = 0.1
-sprite_scale = 1.0
+sprite_scale = 1.45
 sprite_set = "skinny_walk"
 outline_color = Color(0.25, 0.42, 0.22, 1)

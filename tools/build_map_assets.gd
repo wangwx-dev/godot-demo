@@ -25,9 +25,12 @@ const MODULE_SCRIPT: String = "res://scenes/levels/modules/map_module_tiled.gd"
 const MapModuleDataScript = preload("res://resources/map_module_data.gd")
 
 ## 碰撞白名单修正：清单里标 solid 但按新规则应为纯装饰的 tile
+## （2026-07-18 试玩反馈二轮：树木全部去碰撞——点状障碍剐蹭走位很不爽）
 const SOLID_OVERRIDES: Dictionary = {
 	"tree_stump": false,  # 膝盖高的树桩不该挡人
 	"straw_mid": false,   # 小草垛过得去，只有 straw_big 当掩体
+	"tree_bare": false,   # 树木纯装饰：kiting 游戏里点状碰撞只带来剐蹭
+	"tree_blossom": false,
 }
 
 var coords: Dictionary = {}  # tile 名 -> 图集坐标 Vector2i
@@ -158,20 +161,60 @@ func _occupied(ctx: Dictionary, x: int, y: int) -> bool:
 	return ctx["obst"].get_cell_source_id(Vector2i(x, y)) != -1
 
 
-## 底层泥地：加权随机变体（噪点 tile 压到 6%，视觉更干净）
-func _fill_base(ctx: Dictionary) -> void:
+## 底层地面：style = "dirt"（城镇，带枯草点缀）/ "grass"（乡村，橄榄绿草甸）/
+## "scorched"（总攻，焦土枯草）。草地 tile 由 tools/extend_atlas_grass.py 合成。
+func _fill_base(ctx: Dictionary, style: String = "dirt") -> void:
 	var rng: RandomNumberGenerator = ctx["rng"]
 	for y in range(CELLS):
 		for x in range(CELLS):
-			var r: float = rng.randf()
-			var n: String = "dirt_a"
-			if r > 0.70 and r <= 0.94:
-				n = "dirt_b"
-			elif r > 0.94 and r <= 0.97:
-				n = "dirt_twigs_a"
-			elif r > 0.97:
-				n = "dirt_twigs_b"
-			_g(ctx, x, y, n)
+			_g(ctx, x, y, _ground_tile(rng, style))
+
+
+func _ground_tile(rng: RandomNumberGenerator, style: String) -> String:
+	var r: float = rng.randf()
+	match style:
+		"grass":
+			if r < 0.42:
+				return "grass_a"
+			if r < 0.68:
+				return "grass_b"
+			if r < 0.82:
+				return "grass_dry_a"
+			if r < 0.92:
+				return "grass_dry_b"
+			return "dirt_a" if r < 0.97 else "dirt_twigs_a"
+		"scorched":
+			if r < 0.50:
+				return "dirt_a"
+			if r < 0.72:
+				return "dirt_b"
+			if r < 0.86:
+				return "grass_dry_b"
+			if r < 0.94:
+				return "grass_dry_a"
+			return "dirt_twigs_b"
+		_:
+			if r < 0.60:
+				return "dirt_a"
+			if r < 0.82:
+				return "dirt_b"
+			if r < 0.89:
+				return "grass_dry_a"
+			if r < 0.94:
+				return "grass_dry_b"
+			if r < 0.97:
+				return "dirt_twigs_a"
+			return "dirt_twigs_b"
+
+
+## 草地斑块：不规则圆斑（城镇模块的绿化残余，画在铺路之前）
+func _grass_blob(ctx: Dictionary, cx: int, cy: int, radius: int) -> void:
+	var rng: RandomNumberGenerator = ctx["rng"]
+	for y in range(maxi(cy - radius, 0), mini(cy + radius + 1, CELLS)):
+		for x in range(maxi(cx - radius, 0), mini(cx + radius + 1, CELLS)):
+			var d: float = Vector2(x - cx, y - cy).length() / radius
+			if d <= 1.0 and rng.randf() > d * d:
+				_g(ctx, x, y, _ground_tile(rng, "grass"))
 
 
 ## 横向沥青路（5 格高：上边线/路面/中线/路面/下边线），城镇干净版
@@ -325,7 +368,7 @@ func _cluster(ctx: Dictionary, names: Array, cx: int, cy: int, radius: int, coun
 		_d(ctx, x, y, names[rng.randi_range(0, names.size() - 1)])
 
 
-## 树丛：绿冠灌木（可走）+ 少量实心树干障碍（岛状，密度低保证能穿行）
+## 树丛：绿冠灌木 + 树木（2026-07-18 起全部纯装饰，不再有点状碰撞）
 func _grove(ctx: Dictionary, x0: int, y0: int, x1: int, y1: int, canopies: int, trunks: int) -> void:
 	var rng: RandomNumberGenerator = ctx["rng"]
 	_scatter(ctx, ["bush_a", "bush_b", "bush_c", "bush_d", "bush_e", "bush_f"], canopies, x0, y0, x1, y1)
@@ -334,16 +377,11 @@ func _grove(ctx: Dictionary, x0: int, y0: int, x1: int, y1: int, canopies: int, 
 		var x: int = rng.randi_range(maxi(x0, 2), mini(x1, CELLS - 3))
 		var y: int = rng.randi_range(maxi(y0, 2), mini(y1, CELLS - 3))
 		if not _occupied(ctx, x, y):
-			_o(ctx, x, y, "tree_bare" if rng.randf() < 0.6 else "tree_blossom")
+			_d(ctx, x, y, "tree_bare" if rng.randf() < 0.6 else "tree_blossom")
 
 
-## 玉米秆密丛块（视觉密、可走；clear_rect 开进出通道与中央空腔）
-func _corn_patch(ctx: Dictionary, x0: int, y0: int, x1: int, y1: int, clear_rect: Rect2i = Rect2i()) -> void:
-	for y in range(y0, y1 + 1):
-		for x in range(x0, x1 + 1):
-			if clear_rect.size != Vector2i.ZERO and clear_rect.has_point(Vector2i(x, y)):
-				continue
-			_d(ctx, x, y, "corn_wall")
+## 玉米秆密丛块——2026-07-18 弃用：corn_wall tile 视觉误读为"茅草屋"（试玩反馈 6）
+#func _corn_patch(...) 已移除，密度遮蔽改用熟麦田/灌木簇承担
 
 
 ## 摆 prop：坐标为格中心（可用 .5）。默认纯装饰；只有白名单大件显式传 solid=true
@@ -398,7 +436,7 @@ func _build_all_modules() -> void:
 ## 出生/Boss 位由 assault_map.gd 硬编码。存成独立场景不挂 MapModuleTiled。
 func _build_assault_arena() -> void:
 	var ctx: Dictionary = _new_ctx("assault_arena")
-	_fill_base(ctx)
+	_fill_base(ctx, "scorched")
 	_road_h_worn(ctx, 18, 16)
 	# 西侧接应点：整片铺装停机坪 + 封锁线残骸（最后的防线叙事）
 	for y in range(13, 28):
@@ -454,6 +492,9 @@ func _save_plain(ctx: Dictionary, scene_path: String, root_name: String) -> void
 func _module_gas_station() -> void:
 	var ctx: Dictionary = _new_ctx("module_gas_station")
 	_fill_base(ctx)
+	_grass_blob(ctx, 30, 6, 5)
+	_grass_blob(ctx, 5, 30, 5)
+	_grass_blob(ctx, 20, 34, 4)
 	_road_h(ctx, 18)
 	_crosswalk_on_road_h(ctx, 30, 18)
 	_manholes(ctx, 3, 18)
@@ -480,9 +521,9 @@ func _module_gas_station() -> void:
 	_prop(ctx, "sign_stop", 18.5, 23.5)
 	_d(ctx, 26, 20, "blood_a")
 
-	# 北：站房东侧疏林；南：西缘玉米丛 + 弃车 + 花簇
+	# 北：站房东侧疏林；南：西缘草甸灌木 + 弃车 + 花簇
 	_grove(ctx, 24, 3, 36, 10, 9, 3)
-	_corn_patch(ctx, 2, 27, 6, 33)
+	_cluster(ctx, ["bush_a", "bush_c", "bush_f"], 4, 30, 3, 7)
 	_prop(ctx, "wreck_brown_h2", 12.0, 28.0, true)
 	_d(ctx, 13, 26, "blood_c")
 	_cluster(ctx, ["flowers_a", "flowers_b", "bush_e"], 30, 31, 3, 7)
@@ -503,6 +544,9 @@ func _module_gas_station() -> void:
 func _module_crossroad() -> void:
 	var ctx: Dictionary = _new_ctx("module_crossroad")
 	_fill_base(ctx)
+	_grass_blob(ctx, 8, 8, 5)
+	_grass_blob(ctx, 31, 7, 5)
+	_grass_blob(ctx, 8, 30, 4)
 	_road_h(ctx, 18)
 	_road_v(ctx, 18, 6, 17)
 	_road_v(ctx, 18, 23, 34)
@@ -536,13 +580,13 @@ func _module_crossroad() -> void:
 	_prop(ctx, "mailbox", 12.5, 9.5)
 	# 东北：疏林
 	_grove(ctx, 26, 3, 36, 12, 10, 3)
-	# 西南：荒坟角（墓碑纯装饰，两棵枯树做障碍岛）
+	# 西南：荒坟角（墓碑与枯树全部纯装饰）
 	_prop(ctx, "tombstone", 6.0, 27.0)
 	_prop(ctx, "tombstone", 8.5, 28.5)
 	_prop(ctx, "tombstone", 6.5, 30.5)
 	_prop(ctx, "tombstone", 10.0, 31.0)
-	_o(ctx, 5, 26, "tree_bare")
-	_o(ctx, 11, 29, "tree_bare")
+	_d(ctx, 5, 26, "tree_bare")
+	_d(ctx, 11, 29, "tree_bare")
 	_d(ctx, 8, 30, "corpse_a")
 	_scatter(ctx, ["blood_a", "blood_b"], 4, 5, 26, 12, 33)
 	# 东南：无围栏庄稼行 + 稻草人
@@ -564,7 +608,7 @@ func _module_crossroad() -> void:
 ## 农田：乡道贯穿（磨损），北大麦田+谷仓支径，南新垦田，围栏只留残段
 func _module_farm() -> void:
 	var ctx: Dictionary = _new_ctx("module_farm")
-	_fill_base(ctx)
+	_fill_base(ctx, "grass")
 	_road_h_worn(ctx, 18, 9)
 
 	# 北侧大麦田（无围栏，西/南缘留两截残栏引导视线）
@@ -586,11 +630,11 @@ func _module_farm() -> void:
 	# 乡道弃车
 	_prop(ctx, "wreck_brown_h", 8.5, 20.5, true)
 	_prop(ctx, "traffic_cone", 11.0, 21.5)
-	# 南侧新垦田（无围栏）+ 西缘疏林
+	# 南侧新垦田（无围栏）+ 西缘疏林 + 东北角熟田
 	_crop_field(ctx, 24, 27, 35, 34, "crops_sprout")
 	_rail_run_h(ctx, 24, 28, 26)
 	_grove(ctx, 2, 23, 8, 36, 7, 3)
-	_corn_patch(ctx, 33, 2, 38, 6)
+	_crop_field(ctx, 33, 2, 38, 6, "crops_mid")
 	_cluster(ctx, ["flowers_a", "flowers_b", "bush_a"], 20, 26, 3, 8)
 	_cluster(ctx, ["bush_f", "tree_stump", "flowers_b"], 13, 31, 3, 6)
 	_scatter(ctx, ["blood_a"], 3, 10, 23, 30, 36)
@@ -609,7 +653,7 @@ func _module_farm() -> void:
 ## 谷仓院：乡道贯穿（磨损），红谷仓+院墙只留两处 L 形残角（全向可进出）
 func _module_barnyard() -> void:
 	var ctx: Dictionary = _new_ctx("module_barnyard")
-	_fill_base(ctx)
+	_fill_base(ctx, "grass")
 	_road_h_worn(ctx, 18, 8)
 
 	# 红谷仓与院墙残角（西北/东北两个 L 角，院子四面敞开）
@@ -629,9 +673,9 @@ func _module_barnyard() -> void:
 	_d(ctx, 18, 14, "corpse_a")
 	_d(ctx, 21, 13, "corpse_b")
 	_d(ctx, 16, 15, "blood_c")
-	# 西北疏林，东南玉米丛，南侧敞牧场
+	# 西北疏林，东南熟田，南侧敞牧场
 	_grove(ctx, 3, 3, 9, 12, 6, 2)
-	_corn_patch(ctx, 30, 28, 37, 34)
+	_crop_field(ctx, 30, 28, 37, 34, "crops_tall_a")
 	_prop(ctx, "windmill", 33.0, 25.0, true)
 	_prop(ctx, "wreck_brown_h", 9.5, 24.5, true)
 	_o(ctx, 29, 24, "straw_big")
@@ -657,6 +701,9 @@ func _module_barnyard() -> void:
 func _module_town() -> void:
 	var ctx: Dictionary = _new_ctx("module_town")
 	_fill_base(ctx)
+	_grass_blob(ctx, 6, 13, 5)
+	_grass_blob(ctx, 31, 31, 5)
+	_grass_blob(ctx, 18, 32, 4)
 	_road_h(ctx, 18)
 	_crosswalk_on_road_h(ctx, 19, 18)
 	_manholes(ctx, 3, 18)
@@ -686,11 +733,11 @@ func _module_town() -> void:
 	_prop(ctx, "barrier_striped", 35.5, 19.5)
 	_prop(ctx, "sign_noentry", 23.0, 16.0)
 	_prop(ctx, "sign_50", 5.0, 23.0)
-	# 南侧：撞出路外的弃车 + 疏林 + 坟角 + 玉米丛
+	# 南侧：撞出路外的弃车 + 疏林 + 坟角 + 熟田
 	_prop(ctx, "wreck_brown_h2", 31.5, 26.0, true)
 	_d(ctx, 30, 25, "blood_c")
 	_grove(ctx, 13, 27, 24, 36, 8, 3)
-	_corn_patch(ctx, 28, 29, 34, 34)
+	_crop_field(ctx, 28, 29, 34, 34, "crops_mid")
 	_prop(ctx, "tombstone", 8.0, 30.0)
 	_prop(ctx, "tombstone", 10.5, 31.5)
 	_prop(ctx, "tombstone", 8.5, 33.0)
@@ -711,7 +758,7 @@ func _module_town() -> void:
 ## 林间墓园：林区公路贯穿（重度磨损），支径通墓园与花甸，玉米迷丛开西口
 func _module_grove() -> void:
 	var ctx: Dictionary = _new_ctx("module_grove")
-	_fill_base(ctx)
+	_fill_base(ctx, "grass")
 	_road_h_worn(ctx, 18, 12)
 
 	# 支径：南接墓园北入口，北接花甸南缘
@@ -743,8 +790,11 @@ func _module_grove() -> void:
 	_o(ctx, 13, 33, "tree_bare")
 	_d(ctx, 8, 31, "corpse_a")
 	_d(ctx, 10, 30, "blood_b")
-	# 东南玉米迷丛：中央空腔 + 西向开口走廊（藏资源点，进得去出得来）
-	_corn_patch(ctx, 26, 25, 36, 35, Rect2i(26, 28, 8, 5))
+	# 东南熟麦田：中央空腔藏资源点（原玉米墙 tile 视觉误读为茅草屋，弃用）
+	_crop_field(ctx, 26, 25, 36, 35, "crops_tall_a")
+	for y in range(28, 33):
+		for x in range(26, 34):
+			_g(ctx, x, y, _ground_tile(ctx["rng"], "grass"))
 	_d(ctx, 31, 30, "straw_mid")
 	_cluster(ctx, ["bush_c", "tree_stump", "tree_shrub_a"], 20, 33, 3, 5)
 

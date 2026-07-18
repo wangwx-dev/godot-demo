@@ -27,6 +27,22 @@ static func frames(prefix: String, count: int, fps: float = 8.0, loop: bool = tr
 	return sf
 
 
+## 按指定帧序构建（一张帧图序列里交错存多套皮肤时用，如 player_variant 三套衣服）
+static func frames_indexed(prefix: String, indices: Array, fps: float = 8.0, loop: bool = true) -> SpriteFrames:
+	var key: String = "%s|%s|%.1f|%s" % [prefix, str(indices), fps, loop]
+	if _frames_cache.has(key):
+		return _frames_cache[key]
+	var sf: SpriteFrames = SpriteFrames.new()
+	sf.set_animation_speed("default", fps)
+	sf.set_animation_loop("default", loop)
+	for i in indices:
+		var tex: Texture2D = load("%s%s_%02d.png" % [SPRITE_ROOT, prefix, i])
+		assert(tex != null, "缺少帧图：" + prefix + "_%02d" % i)
+		sf.add_frame("default", tex)
+	_frames_cache[key] = sf
+	return sf
+
+
 ## 一次性动画（爆炸/挥砍/枪口焰等）：播完自动销毁
 static func one_shot(parent: Node, prefix: String, count: int, pos: Vector2,
 		fps: float = 12.0, sprite_scale: float = 1.0, rot: float = 0.0) -> AnimatedSprite2D:

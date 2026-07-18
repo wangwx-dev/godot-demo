@@ -1,574 +1,598 @@
-﻿{
-    "tile_size":  32,
-    "columns":  12,
-    "source":  "Zombie Apocalypse Tileset (Ittai Manero, itch.io)",
-    "tiles":  [
-                  {
-                      "name":  "dirt_a",
-                      "src_id":  "0077",
-                      "x":  0,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "dirt_b",
-                      "src_id":  "0078",
-                      "x":  1,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "dirt_twigs_a",
-                      "src_id":  "0079",
-                      "x":  2,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "dirt_twigs_b",
-                      "src_id":  "0080",
-                      "x":  3,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "flowers_a",
-                      "src_id":  "0117",
-                      "x":  4,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "flowers_b",
-                      "src_id":  "0217",
-                      "x":  5,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "corn_wall",
-                      "src_id":  "0064",
-                      "x":  6,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_patch",
-                      "src_id":  "0065",
-                      "x":  7,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_cross",
-                      "src_id":  "0066",
-                      "x":  8,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_h",
-                      "src_id":  "0067",
-                      "x":  9,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_v",
-                      "src_id":  "0068",
-                      "x":  10,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_bend_a",
-                      "src_id":  "0069",
-                      "x":  11,
-                      "y":  0,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_bend_b",
-                      "src_id":  "0070",
-                      "x":  0,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_bend_c",
-                      "src_id":  "0071",
-                      "x":  1,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_bend_d",
-                      "src_id":  "0072",
-                      "x":  2,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_bend_e",
-                      "src_id":  "0073",
-                      "x":  3,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_bend_f",
-                      "src_id":  "0074",
-                      "x":  4,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_t_a",
-                      "src_id":  "0075",
-                      "x":  5,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "path_t_b",
-                      "src_id":  "0076",
-                      "x":  6,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_plain",
-                      "src_id":  "0053",
-                      "x":  7,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_manhole",
-                      "src_id":  "0054",
-                      "x":  8,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_edge_v_left",
-                      "src_id":  "0029",
-                      "x":  9,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_edge_v_right",
-                      "src_id":  "0039",
-                      "x":  10,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_dash_v",
-                      "src_id":  "0034",
-                      "x":  11,
-                      "y":  1,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_edge_h_top",
-                      "src_id":  "0044",
-                      "x":  0,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_line_h_mid",
-                      "src_id":  "0045",
-                      "x":  1,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_edge_h_bottom",
-                      "src_id":  "0046",
-                      "x":  2,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_cross_v_a",
-                      "src_id":  "0047",
-                      "x":  3,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_cross_v_b",
-                      "src_id":  "0048",
-                      "x":  4,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_cross_v_c",
-                      "src_id":  "0049",
-                      "x":  5,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_cross_h_a",
-                      "src_id":  "0050",
-                      "x":  6,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "road_cross_h_b",
-                      "src_id":  "0051",
-                      "x":  7,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "crops_tilled",
-                      "src_id":  "0109",
-                      "x":  8,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "crops_sprout",
-                      "src_id":  "0110",
-                      "x":  9,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "crops_mid",
-                      "src_id":  "0111",
-                      "x":  10,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "crops_tall_a",
-                      "src_id":  "0112",
-                      "x":  11,
-                      "y":  2,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "blood_a",
-                      "src_id":  "0384",
-                      "x":  0,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "blood_b",
-                      "src_id":  "0385",
-                      "x":  1,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "blood_c",
-                      "src_id":  "0386",
-                      "x":  2,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "corpse_a",
-                      "src_id":  "0290",
-                      "x":  3,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "corpse_b",
-                      "src_id":  "0293",
-                      "x":  4,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "bush_a",
-                      "src_id":  "0082",
-                      "x":  5,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "bush_b",
-                      "src_id":  "0084",
-                      "x":  6,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "bush_c",
-                      "src_id":  "0085",
-                      "x":  7,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "bush_d",
-                      "src_id":  "0086",
-                      "x":  8,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "bush_e",
-                      "src_id":  "0088",
-                      "x":  9,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "bush_f",
-                      "src_id":  "0090",
-                      "x":  10,
-                      "y":  3,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "tree_bare",
-                      "src_id":  "0134",
-                      "x":  11,
-                      "y":  3,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "tree_stump",
-                      "src_id":  "0138",
-                      "x":  0,
-                      "y":  4,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "tree_blossom",
-                      "src_id":  "0142",
-                      "x":  1,
-                      "y":  4,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "tree_shrub_a",
-                      "src_id":  "0135",
-                      "x":  2,
-                      "y":  4,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "tree_shrub_b",
-                      "src_id":  "0136",
-                      "x":  3,
-                      "y":  4,
-                      "solid":  0
-                  },
-                  {
-                      "name":  "picket_a",
-                      "src_id":  "0126",
-                      "x":  4,
-                      "y":  4,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "picket_b",
-                      "src_id":  "0127",
-                      "x":  5,
-                      "y":  4,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "picket_c",
-                      "src_id":  "0128",
-                      "x":  6,
-                      "y":  4,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "picket_d",
-                      "src_id":  "0129",
-                      "x":  7,
-                      "y":  4,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "picket_e",
-                      "src_id":  "0130",
-                      "x":  8,
-                      "y":  4,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "picket_f",
-                      "src_id":  "0131",
-                      "x":  9,
-                      "y":  4,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "picket_g",
-                      "src_id":  "0132",
-                      "x":  10,
-                      "y":  4,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "picket_h",
-                      "src_id":  "0133",
-                      "x":  11,
-                      "y":  4,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "board_a",
-                      "src_id":  "0194",
-                      "x":  0,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "board_b",
-                      "src_id":  "0195",
-                      "x":  1,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "board_c",
-                      "src_id":  "0196",
-                      "x":  2,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "board_d",
-                      "src_id":  "0197",
-                      "x":  3,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "board_e",
-                      "src_id":  "0198",
-                      "x":  4,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "board_f",
-                      "src_id":  "0199",
-                      "x":  5,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "board_g",
-                      "src_id":  "0200",
-                      "x":  6,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "board_h",
-                      "src_id":  "0201",
-                      "x":  7,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_h_left",
-                      "src_id":  "0206",
-                      "x":  8,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_h",
-                      "src_id":  "0207",
-                      "x":  9,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_h_right",
-                      "src_id":  "0208",
-                      "x":  10,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_v_a",
-                      "src_id":  "0209",
-                      "x":  11,
-                      "y":  5,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_v_b",
-                      "src_id":  "0210",
-                      "x":  0,
-                      "y":  6,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_mid_a",
-                      "src_id":  "0211",
-                      "x":  1,
-                      "y":  6,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_mid_b",
-                      "src_id":  "0212",
-                      "x":  2,
-                      "y":  6,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_h_plain",
-                      "src_id":  "0213",
-                      "x":  3,
-                      "y":  6,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_mid_c",
-                      "src_id":  "0214",
-                      "x":  4,
-                      "y":  6,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_post_a",
-                      "src_id":  "0215",
-                      "x":  5,
-                      "y":  6,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "rail_post_b",
-                      "src_id":  "0216",
-                      "x":  6,
-                      "y":  6,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "straw_big",
-                      "src_id":  "0118",
-                      "x":  7,
-                      "y":  6,
-                      "solid":  1
-                  },
-                  {
-                      "name":  "straw_mid",
-                      "src_id":  "0119",
-                      "x":  8,
-                      "y":  6,
-                      "solid":  1
-                  }
-              ]
+{
+ "tile_size": 32,
+ "columns": 12,
+ "source": "Zombie Apocalypse Tileset (Ittai Manero, itch.io)",
+ "tiles": [
+  {
+   "name": "dirt_a",
+   "src_id": "0077",
+   "x": 0,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "dirt_b",
+   "src_id": "0078",
+   "x": 1,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "dirt_twigs_a",
+   "src_id": "0079",
+   "x": 2,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "dirt_twigs_b",
+   "src_id": "0080",
+   "x": 3,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "flowers_a",
+   "src_id": "0117",
+   "x": 4,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "flowers_b",
+   "src_id": "0217",
+   "x": 5,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "corn_wall",
+   "src_id": "0064",
+   "x": 6,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "path_patch",
+   "src_id": "0065",
+   "x": 7,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "path_cross",
+   "src_id": "0066",
+   "x": 8,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "path_h",
+   "src_id": "0067",
+   "x": 9,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "path_v",
+   "src_id": "0068",
+   "x": 10,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "path_bend_a",
+   "src_id": "0069",
+   "x": 11,
+   "y": 0,
+   "solid": 0
+  },
+  {
+   "name": "path_bend_b",
+   "src_id": "0070",
+   "x": 0,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "path_bend_c",
+   "src_id": "0071",
+   "x": 1,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "path_bend_d",
+   "src_id": "0072",
+   "x": 2,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "path_bend_e",
+   "src_id": "0073",
+   "x": 3,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "path_bend_f",
+   "src_id": "0074",
+   "x": 4,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "path_t_a",
+   "src_id": "0075",
+   "x": 5,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "path_t_b",
+   "src_id": "0076",
+   "x": 6,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "road_plain",
+   "src_id": "0053",
+   "x": 7,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "road_manhole",
+   "src_id": "0054",
+   "x": 8,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "road_edge_v_left",
+   "src_id": "0029",
+   "x": 9,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "road_edge_v_right",
+   "src_id": "0039",
+   "x": 10,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "road_dash_v",
+   "src_id": "0034",
+   "x": 11,
+   "y": 1,
+   "solid": 0
+  },
+  {
+   "name": "road_edge_h_top",
+   "src_id": "0044",
+   "x": 0,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "road_line_h_mid",
+   "src_id": "0045",
+   "x": 1,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "road_edge_h_bottom",
+   "src_id": "0046",
+   "x": 2,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "road_cross_v_a",
+   "src_id": "0047",
+   "x": 3,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "road_cross_v_b",
+   "src_id": "0048",
+   "x": 4,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "road_cross_v_c",
+   "src_id": "0049",
+   "x": 5,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "road_cross_h_a",
+   "src_id": "0050",
+   "x": 6,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "road_cross_h_b",
+   "src_id": "0051",
+   "x": 7,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "crops_tilled",
+   "src_id": "0109",
+   "x": 8,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "crops_sprout",
+   "src_id": "0110",
+   "x": 9,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "crops_mid",
+   "src_id": "0111",
+   "x": 10,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "crops_tall_a",
+   "src_id": "0112",
+   "x": 11,
+   "y": 2,
+   "solid": 0
+  },
+  {
+   "name": "blood_a",
+   "src_id": "0384",
+   "x": 0,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "blood_b",
+   "src_id": "0385",
+   "x": 1,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "blood_c",
+   "src_id": "0386",
+   "x": 2,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "corpse_a",
+   "src_id": "0290",
+   "x": 3,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "corpse_b",
+   "src_id": "0293",
+   "x": 4,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "bush_a",
+   "src_id": "0082",
+   "x": 5,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "bush_b",
+   "src_id": "0084",
+   "x": 6,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "bush_c",
+   "src_id": "0085",
+   "x": 7,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "bush_d",
+   "src_id": "0086",
+   "x": 8,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "bush_e",
+   "src_id": "0088",
+   "x": 9,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "bush_f",
+   "src_id": "0090",
+   "x": 10,
+   "y": 3,
+   "solid": 0
+  },
+  {
+   "name": "tree_bare",
+   "src_id": "0134",
+   "x": 11,
+   "y": 3,
+   "solid": 1
+  },
+  {
+   "name": "tree_stump",
+   "src_id": "0138",
+   "x": 0,
+   "y": 4,
+   "solid": 1
+  },
+  {
+   "name": "tree_blossom",
+   "src_id": "0142",
+   "x": 1,
+   "y": 4,
+   "solid": 1
+  },
+  {
+   "name": "tree_shrub_a",
+   "src_id": "0135",
+   "x": 2,
+   "y": 4,
+   "solid": 0
+  },
+  {
+   "name": "tree_shrub_b",
+   "src_id": "0136",
+   "x": 3,
+   "y": 4,
+   "solid": 0
+  },
+  {
+   "name": "picket_a",
+   "src_id": "0126",
+   "x": 4,
+   "y": 4,
+   "solid": 1
+  },
+  {
+   "name": "picket_b",
+   "src_id": "0127",
+   "x": 5,
+   "y": 4,
+   "solid": 1
+  },
+  {
+   "name": "picket_c",
+   "src_id": "0128",
+   "x": 6,
+   "y": 4,
+   "solid": 1
+  },
+  {
+   "name": "picket_d",
+   "src_id": "0129",
+   "x": 7,
+   "y": 4,
+   "solid": 1
+  },
+  {
+   "name": "picket_e",
+   "src_id": "0130",
+   "x": 8,
+   "y": 4,
+   "solid": 1
+  },
+  {
+   "name": "picket_f",
+   "src_id": "0131",
+   "x": 9,
+   "y": 4,
+   "solid": 1
+  },
+  {
+   "name": "picket_g",
+   "src_id": "0132",
+   "x": 10,
+   "y": 4,
+   "solid": 1
+  },
+  {
+   "name": "picket_h",
+   "src_id": "0133",
+   "x": 11,
+   "y": 4,
+   "solid": 1
+  },
+  {
+   "name": "board_a",
+   "src_id": "0194",
+   "x": 0,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "board_b",
+   "src_id": "0195",
+   "x": 1,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "board_c",
+   "src_id": "0196",
+   "x": 2,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "board_d",
+   "src_id": "0197",
+   "x": 3,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "board_e",
+   "src_id": "0198",
+   "x": 4,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "board_f",
+   "src_id": "0199",
+   "x": 5,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "board_g",
+   "src_id": "0200",
+   "x": 6,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "board_h",
+   "src_id": "0201",
+   "x": 7,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "rail_h_left",
+   "src_id": "0206",
+   "x": 8,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "rail_h",
+   "src_id": "0207",
+   "x": 9,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "rail_h_right",
+   "src_id": "0208",
+   "x": 10,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "rail_v_a",
+   "src_id": "0209",
+   "x": 11,
+   "y": 5,
+   "solid": 1
+  },
+  {
+   "name": "rail_v_b",
+   "src_id": "0210",
+   "x": 0,
+   "y": 6,
+   "solid": 1
+  },
+  {
+   "name": "rail_mid_a",
+   "src_id": "0211",
+   "x": 1,
+   "y": 6,
+   "solid": 1
+  },
+  {
+   "name": "rail_mid_b",
+   "src_id": "0212",
+   "x": 2,
+   "y": 6,
+   "solid": 1
+  },
+  {
+   "name": "rail_h_plain",
+   "src_id": "0213",
+   "x": 3,
+   "y": 6,
+   "solid": 1
+  },
+  {
+   "name": "rail_mid_c",
+   "src_id": "0214",
+   "x": 4,
+   "y": 6,
+   "solid": 1
+  },
+  {
+   "name": "rail_post_a",
+   "src_id": "0215",
+   "x": 5,
+   "y": 6,
+   "solid": 1
+  },
+  {
+   "name": "rail_post_b",
+   "src_id": "0216",
+   "x": 6,
+   "y": 6,
+   "solid": 1
+  },
+  {
+   "name": "straw_big",
+   "src_id": "0118",
+   "x": 7,
+   "y": 6,
+   "solid": 1
+  },
+  {
+   "name": "straw_mid",
+   "src_id": "0119",
+   "x": 8,
+   "y": 6,
+   "solid": 1
+  },
+  {
+   "name": "grass_a",
+   "x": 0,
+   "y": 7,
+   "solid": 0
+  },
+  {
+   "name": "grass_b",
+   "x": 1,
+   "y": 7,
+   "solid": 0
+  },
+  {
+   "name": "grass_dry_a",
+   "x": 2,
+   "y": 7,
+   "solid": 0
+  },
+  {
+   "name": "grass_dry_b",
+   "x": 3,
+   "y": 7,
+   "solid": 0
+  }
+ ]
 }
