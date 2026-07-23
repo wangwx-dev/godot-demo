@@ -73,4 +73,70 @@ d.rectangle([2, 10, 15, 13], fill=(190, 150, 40, 255), outline=(140, 110, 30, 25
 d.line([(5, 8), (8, 8)], fill=(240, 215, 120, 255), width=1)
 save(img, "loot_gold_bar.png")
 
+# ---- 新武器图标 24x24（F2 武器扩容：4 主武器+5 副武器；霰弹枪复用既有
+# pickups/icon_shotgun.png，诱饵收音机复用既有 pickups/radio_00.png，两者不重绘） ----
+
+# 自制钉枪：灰色枪管 + 露出的钉子束
+img, d = canvas(24)
+d.rectangle([2, 11, 16, 15], fill=(90, 92, 96, 255), outline=(50, 52, 56, 255))
+d.rectangle([16, 12, 21, 14], fill=(70, 72, 76, 255))
+for x in (17, 19, 21):
+    d.line([(x, 9), (x, 13)], fill=(200, 190, 150, 255), width=1)
+d.rectangle([3, 15, 9, 20], fill=(70, 48, 30, 255))
+save(img, "icon_nailgun.png")
+
+# 链锯：橙色机身 + 银色齿刃条
+img, d = canvas(24)
+d.rectangle([2, 9, 10, 16], fill=(200, 120, 30, 255), outline=(120, 65, 15, 255))
+d.rectangle([9, 10, 21, 13], fill=(150, 152, 156, 255), outline=(90, 92, 96, 255))
+for x in range(10, 21, 2):
+    d.line([(x, 10), (x + 1, 13)], fill=(60, 62, 66, 255), width=1)
+d.ellipse([3, 17, 8, 22], fill=(60, 62, 66, 255))
+save(img, "icon_chainsaw.png")
+
+# 复合弓：弧形弓身 + 弦 + 搭箭
+img, d = canvas(24)
+d.arc([3, 1, 19, 22], 250, 470, fill=(110, 75, 40, 255), width=2)
+d.line([(6, 3), (6, 20)], fill=(210, 205, 190, 255), width=1)
+d.line([(2, 11), (20, 11)], fill=(160, 110, 60, 255), width=1)
+d.polygon([(20, 11), (16, 9), (16, 13)], fill=(170, 170, 165, 255))
+save(img, "icon_bow.png")
+
+# 土制手雷：军绿椭圆 + 保险栓
+img, d = canvas(24)
+d.ellipse([5, 8, 18, 21], fill=(80, 95, 55, 255), outline=(45, 55, 30, 255))
+for y in (11, 14, 17):
+    d.line([(6, y), (17, y)], fill=(45, 55, 30, 255), width=1)
+d.rectangle([10, 3, 13, 8], fill=(90, 92, 96, 255), outline=(50, 52, 56, 255))
+d.ellipse([14, 2, 20, 8], outline=(140, 30, 25, 255), width=2)
+save(img, "icon_grenade.png")
+
+# 捕兽夹：灰色圆环 + 放射齿（呼应场景内 bear_trap.gd 的 _draw 视觉语言）
+img, d = canvas(24)
+d.ellipse([5, 5, 19, 19], outline=(120, 122, 126, 255), width=2)
+for i in range(8):
+    import math
+    a = math.tau * i / 8
+    x0, y0 = 12 + 7 * math.cos(a), 12 + 7 * math.sin(a)
+    x1, y1 = 12 + 11 * math.cos(a), 12 + 11 * math.sin(a)
+    d.line([(x0, y0), (x1, y1)], fill=(160, 162, 166, 255), width=2)
+save(img, "icon_bear_trap.png")
+
+# 闪光弹：橄榄色圆柱罐体 + 顶部白色爆闪星
+img, d = canvas(24)
+d.rectangle([8, 9, 16, 21], fill=(105, 110, 90, 255), outline=(60, 64, 50, 255))
+d.ellipse([8, 7, 16, 11], fill=(120, 125, 105, 255), outline=(60, 64, 50, 255))
+for dx, dy in ((0, -6), (5, -3), (-5, -3), (3, -5), (-3, -5)):
+    d.line([(12, 6), (12 + dx, 6 + dy)], fill=(250, 245, 200, 255), width=1)
+save(img, "icon_flashbang.png")
+
+# 肾上腺素：注射器（针管+活塞+针头）
+img, d = canvas(24)
+d.rectangle([8, 6, 15, 17], fill=(220, 225, 225, 200), outline=(120, 122, 126, 255))
+d.rectangle([9, 12, 14, 17], fill=(200, 50, 55, 220))
+d.rectangle([10, 2, 13, 6], fill=(150, 152, 156, 255))
+d.line([(11, 17), (11, 22)], fill=(180, 182, 186, 255), width=1)
+d.rectangle([6, 6, 17, 8], fill=(150, 152, 156, 255))
+save(img, "icon_adrenaline.png")
+
 print("[icons] 完成")

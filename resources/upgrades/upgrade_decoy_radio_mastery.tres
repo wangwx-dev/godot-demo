@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=3 format=3 uid="uid://cupgirad19ss"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+[ext_resource type="Resource" uid="uid://cwepadat11rad" path="res://resources/weapons/weapon_decoy_radio.tres" id="2_radio"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "收音机精通"
+description = "诱饵收音机专属强化（顺序解锁）"
+rarity = 1
+effect = 8
+effect_value = 0.0
+max_stacks = 2
+weapon_ref = ExtResource("2_radio")
+level_names = PackedStringArray("增强天线", "持久电池")
+level_descs = PackedStringArray("引怪半径 +60px", "持续时间 +5s")

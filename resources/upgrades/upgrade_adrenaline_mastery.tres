@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=3 format=3 uid="uid://cupgjadr20tt"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+[ext_resource type="Resource" uid="uid://cwepbdat12adr" path="res://resources/weapons/weapon_adrenaline.tres" id="2_adrenaline"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "肾上腺素精通"
+description = "肾上腺素专属强化（顺序解锁）"
+rarity = 1
+effect = 8
+effect_value = 0.0
+max_stacks = 2
+weapon_ref = ExtResource("2_adrenaline")
+level_names = PackedStringArray("浓缩剂量", "耐受强化")
+level_descs = PackedStringArray("加速持续 +1.5s", "冷却 -5s")

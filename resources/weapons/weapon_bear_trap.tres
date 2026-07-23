@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3 uid="uid://cwep8dat09trp"]
+
+[ext_resource type="Script" path="res://resources/weapon_data.gd" id="1_data"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/icon_bear_trap.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_data")
+icon = ExtResource("2_icon")
+display_name = "捕兽夹"
+slot = 1
+damage = 0
+interval = 16.0
+attack_range = 260.0
+geometry = 6
+geometry_params = {
+"place_offset": 90.0,
+"root_duration": 3.0,
+"trigger_damage": 8,
+"trap_lifetime": 12.0
+}
+knockback = 0.0
+level_effects = [{
+"duration_add": 1.5
+}, {
+"trap_add": 1.0
+}]

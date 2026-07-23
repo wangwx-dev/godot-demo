@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=3 format=3 uid="uid://cupghfla18rr"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+[ext_resource type="Resource" uid="uid://cwep9dat10fla" path="res://resources/weapons/weapon_flashbang.tres" id="2_flash"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "闪光弹精通"
+description = "闪光弹专属强化（顺序解锁）"
+rarity = 1
+effect = 8
+effect_value = 0.0
+max_stacks = 2
+weapon_ref = ExtResource("2_flash")
+level_names = PackedStringArray("强光配方", "广域闪光")
+level_descs = PackedStringArray("定身时长 +1.0s", "范围半径 +40px")

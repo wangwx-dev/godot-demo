@@ -22,6 +22,7 @@ var _dodge_velocity: Vector2 = Vector2.ZERO
 var _dead: bool = false
 var _facing: String = "down"
 var _attack_timer: float = 0.0
+var _speed_modifiers: Dictionary = {}  ## 来源名→乘数，多来源相乘（链锯减速/肾上腺素加速）
 
 @onready var body: AnimatedSprite2D = $Body
 
@@ -45,9 +46,20 @@ func play_attack(direction: Vector2) -> void:
 	body.play("slash_" + _facing)
 
 
+## 武器侧临时改速：mult=1.0 时自动清除来源条目（链锯持续设置/肾上腺素定时清除）。
+func set_speed_modifier(source: String, mult: float) -> void:
+	if mult == 1.0:
+		_speed_modifiers.erase(source)
+	else:
+		_speed_modifiers[source] = mult
+
+
 ## 强化聚合后的实效属性（每帧读，叠层即时生效）。
 func effective_speed() -> float:
-	return max_speed * (1.0 + RunState.stat_sum(UpgradeData.Effect.MOVE_SPEED_MULT))
+	var mult: float = 1.0 + RunState.stat_sum(UpgradeData.Effect.MOVE_SPEED_MULT)
+	for source in _speed_modifiers:
+		mult *= _speed_modifiers[source]
+	return max_speed * mult
 
 
 func effective_pickup_radius() -> float:

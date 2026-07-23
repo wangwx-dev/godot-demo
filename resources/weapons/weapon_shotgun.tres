@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3 uid="uid://cwep3dat04sho"]
+
+[ext_resource type="Script" path="res://resources/weapon_data.gd" id="1_data"]
+[ext_resource type="Texture2D" path="res://assets/sprites/pickups/icon_shotgun.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_data")
+icon = ExtResource("2_icon")
+display_name = "霰弹枪"
+slot = 0
+damage = 7
+interval = 1.1
+attack_range = 260.0
+geometry = 3
+geometry_params = {
+"pellet_count": 5,
+"spread_degrees": 40.0,
+"bullet_speed": 500.0
+}
+knockback = 40.0
+level_effects = [{
+"damage_add": 3.0
+}, {
+"pellet_add": 2.0
+}, {
+"interval_add": -0.25
+}]

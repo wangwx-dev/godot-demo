@@ -20,6 +20,14 @@ var speed_multiplier: float = 1.0
 ## 全体移速硬顶（崩溃期 200 < 玩家 220，"赶你走不是处刑"）。INF = 无顶。
 var speed_cap: float = INF
 
+## 控场接口（weapon-design 副武器：捕兽夹定身/闪光弹眩晕）。
+var _control_timer: float = 0.0
+var _control_mult: float = 1.0
+## 诱饵接口（诱饵收音机）：拉扯期间追逐目标改为诱饵位置，衰减制——诱饵每帧续期，
+## 离开引怪半径或诱饵消失后自然到期，不需要额外的"退出引怪"通知。
+var _lure_pos: Vector2 = Vector2.ZERO
+var _lure_timer: float = 0.0
+
 var state: State = State.SPAWN
 var hp: int = 0
 var knockback_velocity: Vector2 = Vector2.ZERO
@@ -77,12 +85,32 @@ func _physics_process(delta: float) -> void:
 			pass
 
 
+## 定身/眩晕：duration 内移速乘 speed_mult（0.0=完全定住），取最长剩余时长续期。
+func apply_control(duration: float, speed_mult: float) -> void:
+	_control_timer = maxf(_control_timer, duration)
+	_control_mult = speed_mult
+
+
+## 诱饵拉扯：追逐目标暂改为 pos，refresh_duration 内有效——诱饵每帧对范围内敌人续期，
+## 敌人离开引怪半径后不再续期，几帧内自然到期回头追玩家。
+func apply_lure(pos: Vector2, refresh_duration: float) -> void:
+	_lure_pos = pos
+	_lure_timer = refresh_duration
+
+
 func _chase(delta: float) -> void:
 	if _player == null or not is_instance_valid(_player):
 		_player = get_tree().get_first_node_in_group("player") as Player
 		return
-	var to_player: Vector2 = _player.global_position - global_position
-	var effective_speed: float = minf(data.speed * speed_multiplier, speed_cap)
+	if _control_timer > 0.0:
+		_control_timer -= delta
+		if _control_timer <= 0.0:
+			_control_mult = 1.0
+	if _lure_timer > 0.0:
+		_lure_timer -= delta
+	var chase_target: Vector2 = _lure_pos if _lure_timer > 0.0 else _player.global_position
+	var to_player: Vector2 = chase_target - global_position
+	var effective_speed: float = minf(data.speed * speed_multiplier * _control_mult, speed_cap)
 	var desired: Vector2 = to_player.normalized() * effective_speed + _separation()
 	knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, KNOCKBACK_FRICTION * delta)
 	velocity = desired.limit_length(effective_speed) + knockback_velocity
@@ -92,10 +120,10 @@ func _chase(delta: float) -> void:
 		if body.animation != anim:
 			body.play(anim)
 	body.speed_scale = clampf(effective_speed / 120.0, 0.6, 2.2)
-	# 接触攻击：贴身 + 自身攻击间隔到点（玩家侧另有 0.5s 受击无敌封顶）
+	# 接触攻击：贴身 + 自身攻击间隔到点（判定始终对真玩家，被诱饵拉走时天然打不到）
 	_damage_timer -= delta
 	var reach: float = BODY_RADIUS * data.sprite_scale + 14.0 + 6.0
-	if _damage_timer <= 0.0 and to_player.length() <= reach:
+	if _damage_timer <= 0.0 and _player.global_position.distance_to(global_position) <= reach:
 		_player.take_damage(data.contact_damage)
 		_damage_timer = data.damage_interval
 

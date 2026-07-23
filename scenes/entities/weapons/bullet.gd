@@ -10,19 +10,23 @@ var _speed: float = 600.0
 var _damage: int = 0
 var _pierce: int = 0
 var _range_left: float = 500.0
+var _knockback: float = 0.0
 var _hit_enemies: Array[EnemyBase] = []
 
 
-func launch(direction: Vector2, speed: float, damage: int, pierce: int, max_range: float) -> void:
+func launch(direction: Vector2, speed: float, damage: int, pierce: int, max_range: float,
+		texture_path: String = "res://assets/sprites/weapons/bullet_tracer_00.png",
+		knockback: float = 0.0) -> void:
 	_direction = direction
 	_speed = speed
 	_damage = damage
 	_pierce = pierce
 	_range_left = max_range
+	_knockback = knockback
 	rotation = direction.angle()
 	if get_child_count() == 0:
 		var sprite: Sprite2D = Sprite2D.new()
-		sprite.texture = load("res://assets/sprites/weapons/bullet_tracer_00.png")
+		sprite.texture = load(texture_path)
 		add_child(sprite)
 
 
@@ -39,7 +43,7 @@ func _physics_process(delta: float) -> void:
 			continue
 		var hit_range: float = HIT_RADIUS * enemy.data.sprite_scale
 		if global_position.distance_to(enemy.global_position) <= hit_range:
-			enemy.take_damage(_damage)
+			enemy.take_damage(_damage, _direction * _knockback)
 			Fx.one_shot(get_parent(), "weapons/bullet_spark", 2, global_position, 18.0, 1.5)
 			_hit_enemies.append(enemy)
 			if _hit_enemies.size() > _pierce:

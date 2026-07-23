@@ -21,6 +21,15 @@ const POOL: Array = [
 	preload("res://resources/upgrades/upgrade_bat_mastery.tres"),
 	preload("res://resources/upgrades/upgrade_pistol_mastery.tres"),
 	preload("res://resources/upgrades/upgrade_molotov_mastery.tres"),
+	preload("res://resources/upgrades/upgrade_shotgun_mastery.tres"),
+	preload("res://resources/upgrades/upgrade_nailgun_mastery.tres"),
+	preload("res://resources/upgrades/upgrade_chainsaw_mastery.tres"),
+	preload("res://resources/upgrades/upgrade_bow_mastery.tres"),
+	preload("res://resources/upgrades/upgrade_grenade_mastery.tres"),
+	preload("res://resources/upgrades/upgrade_bear_trap_mastery.tres"),
+	preload("res://resources/upgrades/upgrade_flashbang_mastery.tres"),
+	preload("res://resources/upgrades/upgrade_decoy_radio_mastery.tres"),
+	preload("res://resources/upgrades/upgrade_adrenaline_mastery.tres"),
 ]
 
 const RARITY_COLORS: Array[Color] = [

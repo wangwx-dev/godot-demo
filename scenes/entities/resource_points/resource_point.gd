@@ -23,7 +23,16 @@ const LOOT_TABLE: Array = [
 const WEAPON_POOL: Array = [
 	preload("res://resources/weapons/weapon_bat.tres"),
 	preload("res://resources/weapons/weapon_pistol.tres"),
+	preload("res://resources/weapons/weapon_shotgun.tres"),
+	preload("res://resources/weapons/weapon_nailgun.tres"),
+	preload("res://resources/weapons/weapon_chainsaw.tres"),
+	preload("res://resources/weapons/weapon_bow.tres"),
 	preload("res://resources/weapons/weapon_molotov.tres"),
+	preload("res://resources/weapons/weapon_grenade.tres"),
+	preload("res://resources/weapons/weapon_bear_trap.tres"),
+	preload("res://resources/weapons/weapon_flashbang.tres"),
+	preload("res://resources/weapons/weapon_decoy_radio.tres"),
+	preload("res://resources/weapons/weapon_adrenaline.tres"),
 ]
 const KIND_NAMES: Array[String] = ["物资箱", "货币箱", "经验矿", "武器箱"]
 const KIND_COLORS: Array[Color] = [

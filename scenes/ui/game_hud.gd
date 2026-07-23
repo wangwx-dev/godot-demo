@@ -9,7 +9,8 @@ const BAR_W: float = 240.0
 const ALERT_W: float = 170.0  # 与迷你图同宽对齐（Minimap.MAP_SIZE_PX）
 const LOW_HP_RATIO: float = 0.3
 
-## 武器图标：按攻击几何映射（球棒为自绘像素图标，其余用素材包代用图）
+## 武器图标：优先读 WeaponData.icon（F2 起 12 把武器各有专属图），
+## 未设置的旧几何类型回退到这张按几何映射的代用图。
 const GEOMETRY_ICONS: Dictionary = {
 	WeaponData.Geometry.ARC: "res://assets/sprites/ui/icon_bat.png",
 	WeaponData.Geometry.LINE: "res://assets/sprites/pickups/icon_pistol.png",
@@ -117,6 +118,8 @@ func _draw_survival_cluster(font: Font) -> void:
 
 
 func _icon_for(data: WeaponData) -> Texture2D:
+	if data.icon != null:
+		return data.icon
 	if not _icon_cache.has(data.geometry):
 		_icon_cache[data.geometry] = load(GEOMETRY_ICONS.get(data.geometry, GEOMETRY_ICONS[WeaponData.Geometry.ARC]))
 	return _icon_cache[data.geometry]

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3 uid="uid://cwep5dat06saw"]
+
+[ext_resource type="Script" path="res://resources/weapon_data.gd" id="1_data"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/icon_chainsaw.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_data")
+icon = ExtResource("2_icon")
+display_name = "链锯"
+slot = 0
+damage = 5
+interval = 0.15
+attack_range = 90.0
+geometry = 4
+geometry_params = {
+"cone_degrees": 70.0,
+"move_mult": 0.65
+}
+knockback = 20.0
+level_effects = [{
+"damage_add": 2.0
+}, {
+"range_add": 20.0
+}, {
+"arc_add": 20.0
+}]

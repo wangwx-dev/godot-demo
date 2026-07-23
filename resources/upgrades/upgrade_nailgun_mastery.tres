@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=3 format=3 uid="uid://cupgcnal13mm"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+[ext_resource type="Resource" uid="uid://cwep4dat05nal" path="res://resources/weapons/weapon_nailgun.tres" id="2_nailgun"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "钉枪精通"
+description = "自制钉枪专属强化（顺序解锁）"
+rarity = 1
+effect = 8
+effect_value = 0.0
+max_stacks = 3
+weapon_ref = ExtResource("2_nailgun")
+level_names = PackedStringArray("淬火钉", "双喂钉", "穿刺钉尖")
+level_descs = PackedStringArray("伤害 +2", "攻击间隔 -0.06s（弹幕成型）", "贯穿 +1")

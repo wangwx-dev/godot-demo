@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=3 format=3 uid="uid://cupgdsaw14nn"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+[ext_resource type="Resource" uid="uid://cwep5dat06saw" path="res://resources/weapons/weapon_chainsaw.tres" id="2_chainsaw"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "链锯精通"
+description = "链锯专属强化（顺序解锁）"
+rarity = 1
+effect = 8
+effect_value = 0.0
+max_stacks = 3
+weapon_ref = ExtResource("2_chainsaw")
+level_names = PackedStringArray("磨快链齿", "加长导板", "双重齿刃")
+level_descs = PackedStringArray("跳伤伤害 +2", "触及范围 +20px", "锥形角度 +20°（70°→90°）")

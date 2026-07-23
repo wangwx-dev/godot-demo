@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=3 format=3 uid="uid://cupggtrp17qq"]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_data"]
+[ext_resource type="Resource" uid="uid://cwep8dat09trp" path="res://resources/weapons/weapon_bear_trap.tres" id="2_trap"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "捕兽夹精通"
+description = "捕兽夹专属强化（顺序解锁）"
+rarity = 1
+effect = 8
+effect_value = 0.0
+max_stacks = 2
+weapon_ref = ExtResource("2_trap")
+level_names = PackedStringArray("锯齿加固", "双重布设")
+level_descs = PackedStringArray("定身时长 +1.5s", "一次布置 2 个陷阱")

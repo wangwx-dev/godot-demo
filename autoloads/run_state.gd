@@ -101,6 +101,12 @@ func weapon_level(weapon: WeaponData) -> int:
 	return weapon_levels.get(weapon, 1)
 
 
+## 换武器规则（weapon-design）：换走的武器专属等级清零，通用强化不受影响；
+## 换装决策"要不要放弃已练到 3 级的球棒"才有分量。
+func clear_weapon_level(weapon: WeaponData) -> void:
+	weapon_levels.erase(weapon)
+
+
 func apply_upgrade(upgrade: UpgradeData) -> void:
 	upgrades[upgrade] = upgrade_stacks(upgrade) + 1
 	match upgrade.effect:

@@ -20,7 +20,8 @@ func _try_attack() -> bool:
 		data.geometry_params.get("bullet_speed", 600.0),
 		effective_damage(),
 		int(data.geometry_params.get("pierce", 0) + _level_sum("pierce_add")),
-		effective_range()
+		effective_range(),
+		data.geometry_params.get("bullet_texture", "res://assets/sprites/weapons/bullet_tracer_00.png")
 	)
 	# 枪口焰：单帧短闪，贴在出膛方向
 	Fx.single(get_tree().current_scene, "weapons/muzzle_flash.png",

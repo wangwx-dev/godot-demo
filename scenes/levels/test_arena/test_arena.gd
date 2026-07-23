@@ -20,6 +20,7 @@ const ROAM_ELITE_CHANCE: float = 0.15  ## 普通图游荡精英概率（enemy-de
 const REINFORCE_TIME: float = 150.0  ## 精英图死线过半增援（2:30）
 
 var _current_weapon: WeaponBase
+var _current_sub_weapon: WeaponBase
 var _director: HeatDirector
 var _death_layer: CanvasLayer
 var _assembler: MapAssembler
@@ -59,10 +60,8 @@ func _ready() -> void:
 	game_hud.director = _director
 	add_child(game_hud)
 	_equip(PISTOL_DATA)
-	# 副武器：燃烧瓶直接挂上（正式版进图搜/商店买，M4+；M3 先验证自动释放与强化）
-	var molotov: WeaponArea = WeaponArea.new()
-	molotov.data = MOLOTOV_DATA
-	player.add_child(molotov)
+	# 副武器起始：燃烧瓶直接挂上（正式版空槽进图搜，此处保留 MVP 起始便利）
+	_equip_sub(MOLOTOV_DATA)
 	add_child(LevelUpMenu.new())
 	add_child(BackpackSwapMenu.new())
 	_place_resource_points()
@@ -218,11 +217,13 @@ func _shuffled_slots(slots: Array[Vector2], rng: RandomNumberGenerator) -> Array
 	return pool
 
 
-## 武器箱产出：主武器直接换装（简版换装决策；正式对比界面归后续）。
+## 武器箱产出：捡新的必须丢旧的，按槽位分发（weapon-design：换装决策 + 换武器清等级）。
 func _on_weapon_looted(weapon: WeaponData) -> void:
 	print("[TestArena] 武器箱开出: %s" % weapon.display_name)
 	if weapon.slot == WeaponData.Slot.MAIN:
 		_equip(weapon)
+	else:
+		_equip_sub(weapon)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -244,16 +245,46 @@ func _unhandled_input(event: InputEvent) -> void:
 				MapFlow.restart_run(get_tree())
 
 
+## 主武器几何 → 实现类。新几何加武器时只需在这张表挂一行（weapon-design 主武器清单）。
+## GDScript 限制：class_name 引用不是常量表达式，这两张表不能声明为 const。
+var MAIN_WEAPON_CLASSES: Dictionary = {
+	WeaponData.Geometry.ARC: WeaponArc,
+	WeaponData.Geometry.LINE: WeaponLine,
+	WeaponData.Geometry.SCATTER: WeaponScatter,
+	WeaponData.Geometry.CONE: WeaponCone,
+}
+
+## 副武器几何 → 实现类（weapon-design 副武器清单：爆发/控场/功能三类）。
+var SUB_WEAPON_CLASSES: Dictionary = {
+	WeaponData.Geometry.AREA: WeaponArea,
+	WeaponData.Geometry.BURST: WeaponBurst,
+	WeaponData.Geometry.TRAP: WeaponTrap,
+	WeaponData.Geometry.STUN: WeaponStun,
+	WeaponData.Geometry.DECOY: WeaponDecoy,
+	WeaponData.Geometry.BUFF: WeaponBuff,
+}
+
+
 func _equip(weapon_data: WeaponData) -> void:
 	if _current_weapon != null:
+		RunState.clear_weapon_level(_current_weapon.data)  # 换主武器清专属等级（通用强化保留）
 		_current_weapon.queue_free()
-	if weapon_data.geometry == WeaponData.Geometry.ARC:
-		_current_weapon = WeaponArc.new()
-	else:
-		_current_weapon = WeaponLine.new()
+	var weapon_class: Script = MAIN_WEAPON_CLASSES.get(weapon_data.geometry, WeaponLine)
+	_current_weapon = weapon_class.new()
 	_current_weapon.data = weapon_data
 	player.add_child(_current_weapon)
 	print("[TestArena] 武器: %s" % weapon_data.display_name)
+
+
+func _equip_sub(weapon_data: WeaponData) -> void:
+	if _current_sub_weapon != null:
+		RunState.clear_weapon_level(_current_sub_weapon.data)
+		_current_sub_weapon.queue_free()
+	var weapon_class: Script = SUB_WEAPON_CLASSES.get(weapon_data.geometry, WeaponArea)
+	_current_sub_weapon = weapon_class.new()
+	_current_sub_weapon.data = weapon_data
+	player.add_child(_current_sub_weapon)
+	print("[TestArena] 副武器: %s" % weapon_data.display_name)
 
 
 ## 死亡结算（M7 正式版）：损失明账 + R 重开。

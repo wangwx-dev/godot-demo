@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3 uid="uid://cwepbdat12adr"]
+
+[ext_resource type="Script" path="res://resources/weapon_data.gd" id="1_data"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/icon_adrenaline.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_data")
+icon = ExtResource("2_icon")
+display_name = "肾上腺素"
+slot = 1
+damage = 0
+interval = 25.0
+attack_range = 0.0
+geometry = 9
+geometry_params = {
+"hp_threshold": 0.5,
+"buff_duration": 3.5,
+"speed_bonus": 0.6
+}
+knockback = 0.0
+level_effects = [{
+"duration_add": 1.5
+}, {
+"interval_add": -5.0
+}]

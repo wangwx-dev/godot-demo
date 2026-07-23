@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3 uid="uid://cwep4dat05nal"]
+
+[ext_resource type="Script" path="res://resources/weapon_data.gd" id="1_data"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/icon_nailgun.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_data")
+icon = ExtResource("2_icon")
+display_name = "自制钉枪"
+slot = 0
+damage = 6
+interval = 0.22
+attack_range = 380.0
+geometry = 1
+geometry_params = {
+"bullet_speed": 750.0,
+"pierce": 0,
+"bullet_texture": "res://assets/sprites/weapons/bullet_tracer_01.png"
+}
+knockback = 0.0
+level_effects = [{
+"damage_add": 2.0
+}, {
+"interval_add": -0.06
+}, {
+"pierce_add": 1.0
+}]

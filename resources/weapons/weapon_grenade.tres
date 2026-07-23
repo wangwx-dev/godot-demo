@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3 uid="uid://cwep7dat08gre"]
+
+[ext_resource type="Script" path="res://resources/weapon_data.gd" id="1_data"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/icon_grenade.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_data")
+icon = ExtResource("2_icon")
+display_name = "土制手雷"
+slot = 1
+damage = 34
+interval = 22.0
+attack_range = 420.0
+geometry = 5
+geometry_params = {
+"cluster_radius": 130.0,
+"cluster_min": 3,
+"blast_radius": 110.0
+}
+knockback = 140.0
+level_effects = [{
+"damage_add": 14.0
+}, {
+"radius_add": 30.0
+}]
