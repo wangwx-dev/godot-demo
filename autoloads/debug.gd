@@ -167,14 +167,23 @@ func _flow_step() -> void:
 
 ## N 个种子各模拟一整局候选流：统计无精英候选的局数、同种子复现失败数。
 func _route_audit(runs: int) -> void:
+	if runs <= 0:
+		print("[route-audit] FAIL：局数必须大于 0")
+		get_tree().quit(2)
+		return
 	var no_elite: int = 0
 	var no_shop_min: int = 0
 	var repro_fail: int = 0
+	var duplicate_days: int = 0
+	var failed_seeds: Array[int] = []
 	for i in runs:
 		var audit_seed: int = 100003 + i * 7919
 		var seq_a: Array = _simulate_route(audit_seed)
-		if seq_a != _simulate_route(audit_seed):
+		var seq_b: Array = _simulate_route(audit_seed)
+		var run_failed: bool = false
+		if seq_a != seq_b:
 			repro_fail += 1
+			run_failed = true
 		var elite_hits: int = 0
 		var shop_hits: int = 0
 		for picks in seq_a:
@@ -182,13 +191,26 @@ func _route_audit(runs: int) -> void:
 				elite_hits += 1
 			if RunState.MapType.SHOP in picks:
 				shop_hits += 1
+			if RunState.MapType.ASSAULT not in picks and picks.size() >= 2 and picks[0] == picks[1]:
+				duplicate_days += 1
+				run_failed = true
 		if elite_hits == 0:
 			no_elite += 1
+			run_failed = true
 		if shop_hits < RunState.SHOP_MIN_OFFERS:
 			no_shop_min += 1
-	print("[route-audit] 局数=%d  无精英候选局=%d  商店不足2局=%d  复现失败=%d" % [
-			runs, no_elite, no_shop_min, repro_fail])
-	get_tree().quit(0)
+			run_failed = true
+		if run_failed and failed_seeds.size() < 8:
+			failed_seeds.append(audit_seed)
+	print("[route-audit] 局数=%d  无精英候选局=%d  商店不足2局=%d  重复候选天=%d  复现失败=%d" % [
+			runs, no_elite, no_shop_min, duplicate_days, repro_fail])
+	var failure_count: int = no_elite + no_shop_min + duplicate_days + repro_fail
+	if failure_count > 0:
+		print("[route-audit] FAIL seeds（最多 8 个）=", failed_seeds)
+		get_tree().quit(1)
+	else:
+		print("[route-audit] PASS")
+		get_tree().quit(0)
 
 
 ## 单局模拟：滚完 8 天候选直到总攻，出口交替选择覆盖两条访问路径。

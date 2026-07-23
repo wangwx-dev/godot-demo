@@ -120,14 +120,40 @@ func _spawn_wave() -> void:
 
 
 func _win() -> void:
-	_ended = true
-	EventBus.run_ended.emit(true)
-	_summary = RunSummary.show_extraction(self)
+	_finish_run(true)
 
 
 func _on_player_died() -> void:
+	_finish_run(false)
+
+
+## 胜负共用一个幂等入口，避免 Boss 与玩家同帧死亡时叠出两份结算。
+func _finish_run(victory: bool) -> void:
+	if _ended:
+		return
 	_ended = true
-	_summary = RunSummary.show_death(self)
+	_freeze_combat()
+	if victory:
+		EventBus.run_ended.emit(true)
+		_summary = RunSummary.show_extraction(self)
+	else:
+		_summary = RunSummary.show_death(self)
+
+
+## 只冻结战斗实体；本关节点继续收输入，因此结算后的 R 重开仍然可用。
+func _freeze_combat() -> void:
+	var combat_nodes: Array[Node] = [player]
+	combat_nodes.append_array(get_tree().get_nodes_in_group("enemies"))
+	combat_nodes.append_array(get_tree().get_nodes_in_group("weapons"))
+	for node in find_children("*", "", true, false):
+		if node is Bullet or node is FireZone:
+			combat_nodes.append(node)
+	for node in combat_nodes:
+		if not is_instance_valid(node):
+			continue
+		node.process_mode = Node.PROCESS_MODE_DISABLED
+		if node is CharacterBody2D:
+			(node as CharacterBody2D).velocity = Vector2.ZERO
 
 
 func _unhandled_input(event: InputEvent) -> void:

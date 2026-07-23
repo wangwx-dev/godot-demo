@@ -189,12 +189,33 @@ func roll_candidates() -> Array[int]:
 			replacement = MapType.REST if rng.randf() < 0.5 else MapType.SHOP
 		picks[1] = replacement
 	var rounds_left: int = TOTAL_DAYS - day  # 含本轮
-	# 精英保底：剩余轮次不够补足 → 强插（写 picks[0]；商店/安全保底写 picks[1]，互不覆盖）
-	if next_day >= 3 and MapType.ELITE not in picks and elite_offers < ELITE_MIN_OFFERS 			and rounds_left <= ELITE_MIN_OFFERS - elite_offers:
-		picks[0] = MapType.ELITE
-	# 商店保底：剩余生成轮次不够补足 2 次 → 强制塞一个商店候选
-	if MapType.SHOP not in picks and shop_offers < SHOP_MIN_OFFERS 			and rounds_left <= SHOP_MIN_OFFERS - shop_offers:
-		picks[1] = MapType.SHOP
+	# 先计算本轮必须兑现的保底，再把精英锚在 0、商店锚在 1。
+	# 不能只在候选缺少类型时写槽位：自然抽中的精英若落在 1，后续商店保底会把它覆盖。
+	var must_offer_elite: bool = (
+		next_day >= 3
+		and elite_offers < ELITE_MIN_OFFERS
+		and rounds_left <= ELITE_MIN_OFFERS - elite_offers
+	)
+	var must_offer_shop: bool = (
+		shop_offers < SHOP_MIN_OFFERS
+		and rounds_left <= SHOP_MIN_OFFERS - shop_offers
+	)
+	if must_offer_elite and must_offer_shop:
+		picks = [MapType.ELITE, MapType.SHOP]
+	elif must_offer_elite:
+		if picks[1] == MapType.ELITE:
+			var displaced: int = picks[0]
+			picks[0] = MapType.ELITE
+			picks[1] = displaced
+		else:
+			picks[0] = MapType.ELITE
+	elif must_offer_shop:
+		if picks[0] == MapType.SHOP:
+			var displaced: int = picks[1]
+			picks[0] = displaced
+			picks[1] = MapType.SHOP
+		else:
+			picks[1] = MapType.SHOP
 	# 安全图保底：干旱 3 天必出 1 个（休整/商店合并计）
 	if safe_drought >= SAFE_DROUGHT_LIMIT 			and MapType.REST not in picks and MapType.SHOP not in picks:
 		picks[1] = MapType.REST if rng.randf() < 0.5 else MapType.SHOP

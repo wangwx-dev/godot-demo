@@ -232,7 +232,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	match key_event.physical_keycode:
 		KEY_TAB:
 			# 切换球棒/手枪——验收对照用，正式版起始二选一
-			_equip(BAT_DATA if _current_weapon.data == PISTOL_DATA else PISTOL_DATA)
+			if OS.is_debug_build():
+				_equip(BAT_DATA if _current_weapon.data == PISTOL_DATA else PISTOL_DATA)
 		KEY_F4:
 			# 快进到死线前 70s，验证最后 60s 警告 + 崩溃（Debug 门控）
 			if OS.is_debug_build():

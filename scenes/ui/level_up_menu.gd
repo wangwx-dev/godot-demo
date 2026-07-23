@@ -7,6 +7,7 @@ extends CanvasLayer
 const REROLL_BASE: int = 10
 const SKIP_REWARD: int = 15
 const WHITE_WEIGHT: float = 0.70
+const MODAL_PAUSE: Script = preload("res://scripts/modal_pause.gd")
 
 const POOL: Array = [
 	preload("res://resources/upgrades/upgrade_damage.tres"),
@@ -51,6 +52,10 @@ func _ready() -> void:
 	visible = false
 	_build_ui()
 	EventBus.player_leveled_up.connect(_on_leveled_up)
+
+
+func _exit_tree() -> void:
+	MODAL_PAUSE.release(self)
 
 
 func _build_ui() -> void:
@@ -101,8 +106,8 @@ func open_bonus(session: int) -> void:
 
 
 func _open() -> void:
-	get_tree().paused = true
 	visible = true
+	MODAL_PAUSE.acquire(self)
 	_reroll_count = 0
 	_session = Session.LEVEL
 	if _pending_levels <= 0 and not _bonus_queue.is_empty():
@@ -118,7 +123,7 @@ func _close() -> void:
 		_open()
 		return
 	visible = false
-	get_tree().paused = false
+	MODAL_PAUSE.release(self)
 
 
 ## 入池条件：未满层；武器专属还要求持有该武器（weapon-design：持有才入池）。
