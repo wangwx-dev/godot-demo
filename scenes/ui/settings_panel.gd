@@ -66,8 +66,10 @@ func _make_slider_row(bus_name: String, label_text: String) -> HBoxContainer:
 	pct.add_theme_font_size_override("font_size", 16)
 	pct.text = "%d%%" % roundi(slider.value * 100.0)
 	slider.value_changed.connect(func(v: float) -> void:
-			GameSettings.set_volume(bus_name, v)
+			GameSettings.preview_volume(bus_name, v)
 			pct.text = "%d%%" % roundi(v * 100.0))
+	slider.drag_ended.connect(func(_changed: bool) -> void:
+			GameSettings.set_volume(bus_name, slider.value))
 	row.add_child(slider)
 	row.add_child(pct)
 	return row

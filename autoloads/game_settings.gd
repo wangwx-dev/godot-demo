@@ -37,6 +37,12 @@ func volume(bus_name: String) -> float:
 	return _volumes.get(bus_name, 1.0)
 
 
+## 实时应用（不写盘）——拖动中每帧调也不磨损磁盘。
+func preview_volume(bus_name: String, linear: float) -> void:
+	_volumes[bus_name] = clampf(linear, 0.0, 1.0)
+	_apply(bus_name)
+
+
 func set_volume(bus_name: String, linear: float) -> void:
 	_volumes[bus_name] = clampf(linear, 0.0, 1.0)
 	_apply(bus_name)
