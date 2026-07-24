@@ -29,6 +29,10 @@ var gold: int = 0
 var backpack: Array[LootData] = []
 var upgrades: Dictionary = {}  ## UpgradeData → 已拿层数
 var weapon_levels: Dictionary = {}  ## WeaponData → 等级（起始 1，专属卡 +1）
+## 跨图保留装备的主/副武器（换图重建关卡时据此复装，否则每图都退回起始武器）。
+## 起始为空——由开局起始武器选择 + 进图搜刮填充（weapon-design 起始二选一）。
+var main_weapon: WeaponData
+var sub_weapon: WeaponData
 var assault_triggered: bool = false
 var kills: int = 0  ## 本局击杀数（结算画面用）
 
@@ -52,6 +56,8 @@ func reset() -> void:
 	backpack.clear()
 	upgrades.clear()
 	weapon_levels.clear()
+	main_weapon = null
+	sub_weapon = null
 	assault_triggered = false
 	kills = 0
 	max_hp = 100

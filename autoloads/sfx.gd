@@ -19,9 +19,11 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS  # 三选一暂停时确认音也要响
 	for i in POOL_SIZE:
 		var player: AudioStreamPlayer = AudioStreamPlayer.new()
+		player.bus = "SFX"
 		add_child(player)
 		_players.append(player)
 	_bgm_player = AudioStreamPlayer.new()
+	_bgm_player.bus = "BGM"
 	add_child(_bgm_player)
 	_bgm_player.finished.connect(func() -> void: _bgm_player.play())
 	# 全局信号自动接线（无归属节点的音效走这里）

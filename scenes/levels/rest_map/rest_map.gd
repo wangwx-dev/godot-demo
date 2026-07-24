@@ -21,6 +21,7 @@ var _active_station: int = -1
 
 
 func _ready() -> void:
+	add_to_group("levels")  # 暂停菜单据此判断当前是否在关卡内
 	player.set_camera_limits(Rect2(0, 0, MAP_W, MAP_H))
 	player.position = Vector2(180, MAP_H / 2.0)
 	_build_walls()

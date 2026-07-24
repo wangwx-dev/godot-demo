@@ -37,6 +37,7 @@ var _summary: RunSummary
 
 
 func _ready() -> void:
+	add_to_group("levels")  # 暂停菜单据此判断当前是否在关卡内
 	var arena: Node2D = ARENA_SCENE.instantiate()
 	add_child(arena)
 	move_child(arena, 0)  # 整图铺 tile 压底，防盖住 Player
@@ -160,8 +161,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	var key_event: InputEventKey = event as InputEventKey
 	if key_event == null or not key_event.pressed or key_event.echo:
 		return
-	if key_event.physical_keycode == KEY_R and _summary != null:
+	if _summary == null:
+		return
+	if key_event.physical_keycode == KEY_R:
 		MapFlow.restart_run(get_tree())
+	elif key_event.physical_keycode == KEY_M:
+		MapFlow.to_main_menu(get_tree())
 
 
 func _build_walls() -> void:

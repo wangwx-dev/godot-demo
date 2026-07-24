@@ -32,6 +32,7 @@ var _reinforced: bool = false
 
 
 func _ready() -> void:
+	add_to_group("levels")  # 暂停菜单据此判断当前是否在关卡内
 	player.set_camera_limits(Rect2(0, 0, MAP_SIZE, MAP_SIZE))
 	_build_boundary_walls()
 	_assembler = MapAssembler.new()
@@ -59,9 +60,15 @@ func _ready() -> void:
 	game_hud.battle_mode = true
 	game_hud.director = _director
 	add_child(game_hud)
-	_equip(PISTOL_DATA)
-	# 副武器起始：燃烧瓶直接挂上（正式版空槽进图搜，此处保留 MVP 起始便利）
-	_equip_sub(MOLOTOV_DATA)
+	# 副武器：复装跨图保留的（RunState），起始默认燃烧瓶
+	_equip_sub(RunState.sub_weapon if RunState.sub_weapon != null else MOLOTOV_DATA)
+	# 主武器：新局第 1 天且尚未选过 → 弹起始二选一；否则复装保留的
+	if RunState.main_weapon == null and RunState.day == 1:
+		var starter: StarterWeaponMenu = StarterWeaponMenu.new()
+		starter.chosen.connect(_equip)
+		add_child(starter)
+	else:
+		_equip(RunState.main_weapon if RunState.main_weapon != null else PISTOL_DATA)
 	add_child(LevelUpMenu.new())
 	add_child(BackpackSwapMenu.new())
 	_place_resource_points()
@@ -243,6 +250,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			# 死亡后开新局：新种子+状态清零（临时试玩循环，正式死亡结算归 M7）
 			if _death_layer != null:
 				MapFlow.restart_run(get_tree())
+		KEY_M:
+			if _death_layer != null:
+				MapFlow.to_main_menu(get_tree())
 
 
 ## 主武器几何 → 实现类。新几何加武器时只需在这张表挂一行（weapon-design 主武器清单）。
@@ -273,6 +283,7 @@ func _equip(weapon_data: WeaponData) -> void:
 	_current_weapon = weapon_class.new()
 	_current_weapon.data = weapon_data
 	player.add_child(_current_weapon)
+	RunState.main_weapon = weapon_data  # 跨图保留
 	print("[TestArena] 武器: %s" % weapon_data.display_name)
 
 
@@ -284,6 +295,7 @@ func _equip_sub(weapon_data: WeaponData) -> void:
 	_current_sub_weapon = weapon_class.new()
 	_current_sub_weapon.data = weapon_data
 	player.add_child(_current_sub_weapon)
+	RunState.sub_weapon = weapon_data  # 跨图保留
 	print("[TestArena] 副武器: %s" % weapon_data.display_name)
 
 

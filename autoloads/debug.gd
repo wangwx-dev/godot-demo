@@ -9,13 +9,15 @@ var heat: float = -1.0
 var spawn_interval: float = -1.0
 
 var _label: Label
-var _overlay_visible: bool = true
+var _overlay_visible: bool = false  # 发布默认关，F1 开
 var _shot_frame: int = 0  # --shot=N：第 N 帧存主视口截图后退出（无人值守 QA）
 var _frame_count: int = 0
 var _start_map: String = ""  # --start-map=shop|rest|assault：起局直接传送（无人值守 QA）
 var _die_at: int = 0  # --die-at=N：第 N 帧自毁（结算画面无人值守 QA）
 var _flow_stage: int = -1  # --flow-test：全循环流转测试（战斗→休整→商店→总攻→杀 Boss→撤离结算）
 var _flow_wait: int = 0
+var _ui_smoke_stage: int = -1  # --ui-smoke：主菜单→起始武器→暂停→设置 交互冒烟
+var _ui_smoke_wait: int = 0
 
 
 func _ready() -> void:
@@ -36,6 +38,9 @@ func _ready() -> void:
 		elif arg.begins_with("--route-audit="):
 			# 路线审计：批量种子模拟整局候选流，验证保底与同种子复现（无头 QA）
 			_route_audit.call_deferred(int(arg.trim_prefix("--route-audit=")))
+		elif arg == "--ui-smoke":
+			_ui_smoke_stage = 0
+			process_mode = Node.PROCESS_MODE_ALWAYS  # 模态菜单暂停树时测试也要继续走
 	var layer: CanvasLayer = CanvasLayer.new()
 	layer.layer = 100
 	_label = Label.new()
@@ -69,6 +74,8 @@ func _process(_delta: float) -> void:
 			qa_player.take_damage(9999)
 	if _flow_stage >= 0:
 		_flow_step()
+	if _ui_smoke_stage >= 0:
+		_ui_smoke_step()
 	if _shot_frame > 0 and _frame_count >= _shot_frame:
 		_shot_frame = 0
 		var img: Image = get_viewport().get_texture().get_image()
@@ -76,8 +83,9 @@ func _process(_delta: float) -> void:
 		img.save_png(ProjectSettings.globalize_path(out_path))
 		print("[Debug] 截图 -> ", out_path)
 		get_tree().quit()
-	_label.visible = _overlay_visible
-	if not _overlay_visible:
+	var in_level: bool = get_tree().current_scene != null and get_tree().current_scene.is_in_group("levels")
+	_label.visible = _overlay_visible and in_level
+	if not _label.visible:
 		return
 	var lines: PackedStringArray = []
 	lines.append("FPS %d" % Engine.get_frames_per_second())
@@ -135,7 +143,11 @@ func _flow_step() -> void:
 	if _flow_wait > 0:
 		return
 	match _flow_stage:
-		0:  # 首图战斗落地缓冲
+		0:  # 预置起始武器（无头点不了起始二选一弹窗）+ 进战斗图
+			RunState.main_weapon = load("res://resources/weapons/weapon_pistol.tres")
+			RunState.sub_weapon = load("res://resources/weapons/weapon_molotov.tres")
+			get_tree().change_scene_to_file.call_deferred(
+					"res://scenes/levels/test_arena/test_arena.tscn")
 			_flow_wait = 120
 			_flow_stage = 1
 		1:
@@ -161,6 +173,98 @@ func _flow_step() -> void:
 						RunState.gold, RunState.kills])
 				print("[flow-test] PASS")
 				get_tree().quit(0)
+
+
+## ---- UI 交互冒烟（--ui-smoke）----
+## 主菜单在场 → 开始新局 → 起始武器弹窗 → 选球棒 → 进战斗图 → 暂停 → 设置调音量 → 回主菜单。
+## 每一步断言关键节点存在/状态正确，任一失配即 FAIL 非零退出。无头验证 UI 接线不炸。
+
+func _ui_smoke_step() -> void:
+	if _frame_count > 4000:
+		print("[ui-smoke] FAIL：超时（stage=%d）" % _ui_smoke_stage)
+		get_tree().quit(1)
+		return
+	_ui_smoke_wait -= 1
+	if _ui_smoke_wait > 0:
+		return
+	var scene: Node = get_tree().current_scene
+	match _ui_smoke_stage:
+		0:  # 主菜单应为起始场景
+			if scene == null or scene.name != "MainMenu":
+				print("[ui-smoke] FAIL：起始场景不是主菜单（%s）" % [scene.name if scene else "null"])
+				get_tree().quit(1)
+				return
+			print("[ui-smoke] 主菜单 OK → 开始新局")
+			RunRng.new_run()
+			RunState.reset()
+			get_tree().change_scene_to_file.call_deferred(
+					"res://scenes/levels/test_arena/test_arena.tscn")
+			_ui_smoke_wait = 60
+			_ui_smoke_stage = 1
+		1:  # 战斗图应弹出起始武器二选一
+			var starter: Node = get_tree().get_first_node_in_group("_modal_pause_owner")
+			var menu: StarterWeaponMenu = _find_starter()
+			if menu == null:
+				print("[ui-smoke] FAIL：起始武器弹窗未出现")
+				get_tree().quit(1)
+				return
+			if not get_tree().paused:
+				print("[ui-smoke] FAIL：起始武器弹窗未暂停树")
+				get_tree().quit(1)
+				return
+			print("[ui-smoke] 起始武器弹窗 OK（树已暂停）→ 选球棒")
+			menu._on_pick(load("res://resources/weapons/weapon_bat.tres"))
+			_ui_smoke_wait = 30
+			_ui_smoke_stage = 2
+		2:  # 选定后应恢复、主武器已装备
+			if get_tree().paused:
+				print("[ui-smoke] FAIL：选武器后树未恢复")
+				get_tree().quit(1)
+				return
+			if RunState.main_weapon == null:
+				print("[ui-smoke] FAIL：主武器未写入 RunState")
+				get_tree().quit(1)
+				return
+			print("[ui-smoke] 起始武器已装备（%s）→ 打开暂停菜单" % RunState.main_weapon.display_name)
+			PauseMenu._show_menu()
+			_ui_smoke_wait = 20
+			_ui_smoke_stage = 3
+		3:  # 暂停菜单应暂停树
+			if not get_tree().paused:
+				print("[ui-smoke] FAIL：暂停菜单未暂停树")
+				get_tree().quit(1)
+				return
+			print("[ui-smoke] 暂停菜单 OK → 调音量")
+			var before: float = GameSettings.volume("BGM")
+			GameSettings.set_volume("BGM", 0.33)
+			if absf(GameSettings.volume("BGM") - 0.33) > 0.001:
+				print("[ui-smoke] FAIL：音量未生效")
+				get_tree().quit(1)
+				return
+			GameSettings.set_volume("BGM", before)
+			print("[ui-smoke] 音量设置 OK → 回主菜单")
+			PauseMenu._on_main_menu()
+			_ui_smoke_wait = 60
+			_ui_smoke_stage = 4
+		4:  # 应回到主菜单，树已恢复
+			if get_tree().paused:
+				print("[ui-smoke] FAIL：回主菜单后树未恢复")
+				get_tree().quit(1)
+				return
+			if scene == null or scene.name != "MainMenu":
+				print("[ui-smoke] FAIL：未回到主菜单（%s）" % [scene.name if scene else "null"])
+				get_tree().quit(1)
+				return
+			print("[ui-smoke] 回主菜单 OK")
+			print("[ui-smoke] PASS")
+			get_tree().quit(0)
+
+
+func _find_starter() -> StarterWeaponMenu:
+	for node in get_tree().get_nodes_in_group("_modal_pause_owner"):
+		if node is StarterWeaponMenu:
+			return node
+	return null
 
 
 ## ---- 路线审计（--route-audit=N）----

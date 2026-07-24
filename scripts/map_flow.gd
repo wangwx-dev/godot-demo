@@ -41,3 +41,10 @@ static func restart_run(tree: SceneTree) -> void:
 	RunState.reset()
 	tree.paused = false
 	tree.change_scene_to_file.call_deferred(SCENE_PATHS[RunState.MapType.BATTLE])
+
+
+## 结算后回主菜单：停 BGM，状态清零留给下次开始局时做。
+static func to_main_menu(tree: SceneTree) -> void:
+	tree.paused = false
+	Sfx.bgm("")
+	tree.change_scene_to_file.call_deferred("res://scenes/ui/main_menu.tscn")

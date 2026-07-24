@@ -18,7 +18,7 @@ static func show_death(parent: Node) -> RunSummary:
 		["击杀 %d 只丧尸" % RunState.kills, Color(0.85, 0.85, 0.8)],
 		["%d 金币与 %d 件物资……全部丢失" % [RunState.gold, RunState.backpack.size()], Color(0.8, 0.5, 0.3)],
 		["", Color.WHITE],
-		["按 R 再来一局（新种子）", Color(0.6, 0.75, 0.6)],
+		["按 R 再来一局 · M 回主菜单", Color(0.6, 0.75, 0.6)],
 	]
 	parent.add_child(summary)
 	return summary
@@ -35,7 +35,7 @@ static func show_extraction(parent: Node) -> RunSummary:
 		["带出 %d 金币" % RunState.gold, Color(0.95, 0.8, 0.25)],
 		["（元进度商店在路上——先记在功劳簿上）", Color(0.6, 0.6, 0.6)],
 		["", Color.WHITE],
-		["按 R 开始新的一局", Color(0.6, 0.75, 0.6)],
+		["按 R 开始新的一局 · M 回主菜单", Color(0.6, 0.75, 0.6)],
 	]
 	parent.add_child(summary)
 	return summary

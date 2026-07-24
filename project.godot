@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="godot-demo"
-run/main_scene="res://scenes/levels/test_arena/test_arena.tscn"
+run/main_scene="res://scenes/ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -22,6 +22,8 @@ RunRng="*res://autoloads/run_rng.gd"
 RunState="*res://autoloads/run_state.gd"
 Debug="*res://autoloads/debug.gd"
 Sfx="*res://autoloads/sfx.gd"
+GameSettings="*res://autoloads/game_settings.gd"
+PauseMenu="*res://autoloads/pause_menu.gd"
 
 [display]
 

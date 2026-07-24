@@ -17,7 +17,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 
-$totalStages = 5
+$totalStages = 6
 $fixedSeed = 424242
 $fixedFps = 60
 
@@ -100,7 +100,14 @@ try {
         '--flow-test'
     )
 
-    Invoke-GodotStage -Number 5 -Name 'Fixed-seed fixed-FPS smoke test' -Arguments @(
+    Invoke-GodotStage -Number 5 -Name 'UI interaction smoke' -Arguments @(
+        '--headless'
+        '--path', $projectRoot
+        '--'
+        '--ui-smoke'
+    )
+
+    Invoke-GodotStage -Number 6 -Name 'Fixed-seed fixed-FPS smoke test' -Arguments @(
         '--headless'
         '--path', $projectRoot
         '--fixed-fps', $fixedFps.ToString()
