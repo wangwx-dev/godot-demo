@@ -161,13 +161,137 @@ func _occupied(ctx: Dictionary, x: int, y: int) -> bool:
 	return ctx["obst"].get_cell_source_id(Vector2i(x, y)) != -1
 
 
-## 底层地面：style = "dirt"（城镇，带枯草点缀）/ "grass"（乡村，橄榄绿草甸）/
-## "scorched"（总攻，焦土枯草）。草地 tile 由 tools/extend_atlas_grass.py 合成。
+## 底层地面（2026-07-24 翻修）：值噪声分区——同类地表成大片、草土交界铺过渡 tile，
+## 消除逐格白噪声的椒盐/棋盘感。style = "dirt"（城镇）/ "grass"（乡村）/ "scorched"（焦土）。
+## 分区噪声 + 过渡 tile 由 tools/extend_atlas_grass.py + build_ground_transitions.py 合成。
+## 走 ctx rng 派生噪声种子，保持整局种子可复现。
 func _fill_base(ctx: Dictionary, style: String = "dirt") -> void:
 	var rng: RandomNumberGenerator = ctx["rng"]
+	var seed_a: int = rng.randi()
+	var seed_b: int = rng.randi()
+	# grass_ratio：不同 style 下"草区"占比阈值（噪声 < 阈值 → 草，否则土）
+	var grass_thresh: float = 0.70 if style == "grass" else (0.40 if style == "dirt" else 0.20)
+	# 第一遍：按噪声定草/土大区
+	var is_grass: Array = []
+	for y in range(CELLS):
+		var row: Array = []
+		for x in range(CELLS):
+			row.append(_noise2(x, y, seed_a, 11.0) < grass_thresh)
+		is_grass.append(row)
+	# 第二遍：落 tile——草区内用草/枯草肌理，土区用土；交界处用过渡
 	for y in range(CELLS):
 		for x in range(CELLS):
-			_g(ctx, x, y, _ground_tile(rng, style))
+			if is_grass[y][x]:
+				# 交界方向：邻格是土 → 用对应边缘/角过渡
+				var edge: String = _grass_edge_tile(is_grass, x, y)
+				if edge != "":
+					_g(ctx, x, y, edge)
+				else:
+					_g(ctx, x, y, _grass_body_tile(x, y, seed_b))
+			else:
+				_g(ctx, x, y, _dirt_body_tile(x, y, seed_b, style))
+
+
+## 值噪声：格点哈希 + 双线性插值，scale 越大区块越大。确定性（种子+坐标）。
+func _noise2(x: int, y: int, seed_val: int, scale: float) -> float:
+	var fx: float = x / scale
+	var fy: float = y / scale
+	var x0: int = floori(fx)
+	var y0: int = floori(fy)
+	var tx: float = fx - x0
+	var ty: float = fy - y0
+	var v00: float = _hash2(x0, y0, seed_val)
+	var v10: float = _hash2(x0 + 1, y0, seed_val)
+	var v01: float = _hash2(x0, y0 + 1, seed_val)
+	var v11: float = _hash2(x0 + 1, y0 + 1, seed_val)
+	# smoothstep 插值
+	var sx: float = tx * tx * (3.0 - 2.0 * tx)
+	var sy: float = ty * ty * (3.0 - 2.0 * ty)
+	var a: float = lerp(v00, v10, sx)
+	var b: float = lerp(v01, v11, sx)
+	return lerp(a, b, sy)
+
+
+func _hash2(x: int, y: int, seed_val: int) -> float:
+	var v: int = (x * 374761393 + y * 668265263 + seed_val * 2246822519) & 0x7fffffff
+	v = ((v ^ (v >> 13)) * 1274126177) & 0x7fffffff
+	return float((v ^ (v >> 16)) & 0xffff) / 65535.0
+
+
+## 草区交界过渡：看四邻/四角是否土，返回合适的 grass_edge/corner，全草返回 ""。
+func _grass_edge_tile(is_grass: Array, x: int, y: int) -> String:
+	var n_dirt: bool = not _grass_at(is_grass, x, y - 1)
+	var s_dirt: bool = not _grass_at(is_grass, x, y + 1)
+	var w_dirt: bool = not _grass_at(is_grass, x - 1, y)
+	var e_dirt: bool = not _grass_at(is_grass, x + 1, y)
+	# 直边优先
+	if n_dirt and not s_dirt and not w_dirt and not e_dirt:
+		return "grass_edge_n"
+	if s_dirt and not n_dirt and not w_dirt and not e_dirt:
+		return "grass_edge_s"
+	if w_dirt and not e_dirt and not n_dirt and not s_dirt:
+		return "grass_edge_w"
+	if e_dirt and not w_dirt and not n_dirt and not s_dirt:
+		return "grass_edge_e"
+	# 外角（相邻两边都是土）
+	if n_dirt and w_dirt:
+		return "grass_corner_nw"
+	if n_dirt and e_dirt:
+		return "grass_corner_ne"
+	if s_dirt and w_dirt:
+		return "grass_corner_sw"
+	if s_dirt and e_dirt:
+		return "grass_corner_se"
+	# 只有对角是土（内角）——用磨损中间态柔化
+	if not _grass_at(is_grass, x - 1, y - 1) or not _grass_at(is_grass, x + 1, y - 1) 			or not _grass_at(is_grass, x - 1, y + 1) or not _grass_at(is_grass, x + 1, y + 1):
+		return "grass_worn"
+	return ""
+
+
+func _grass_at(is_grass: Array, x: int, y: int) -> bool:
+	if x < 0 or y < 0 or x >= CELLS or y >= CELLS:
+		return true  # 图外当草，不在边界硬切
+	return is_grass[y][x]
+
+
+func _grass_body_tile(x: int, y: int, seed_val: int) -> String:
+	var r: float = _hash2(x, y, seed_val)
+	if r < 0.5:
+		return "grass_a"
+	if r < 0.82:
+		return "grass_b"
+	if r < 0.93:
+		return "grass_dry_a"
+	return "grass_worn"
+
+
+func _dirt_body_tile(x: int, y: int, seed_val: int, style: String) -> String:
+	var r: float = _hash2(x, y, seed_val + 99)
+	if style == "grass":
+		# 乡村的土区更多枯草感
+		if r < 0.55:
+			return "dirt_a"
+		if r < 0.78:
+			return "grass_dry_b"
+		if r < 0.9:
+			return "dirt_b"
+		return "dirt_twigs_a"
+	if style == "scorched":
+		if r < 0.5:
+			return "dirt_a"
+		if r < 0.75:
+			return "dirt_b"
+		if r < 0.9:
+			return "grass_dry_b"
+		return "dirt_twigs_b"
+	# dirt（城镇）
+	if r < 0.55:
+		return "dirt_a"
+	if r < 0.82:
+		return "dirt_b"
+	if r < 0.92:
+		return "grass_dry_a"
+	return "dirt_twigs_a"
 
 
 func _ground_tile(rng: RandomNumberGenerator, style: String) -> String:

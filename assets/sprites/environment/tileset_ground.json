@@ -593,6 +593,60 @@
    "x": 3,
    "y": 7,
    "solid": 0
+  },
+  {
+   "name": "grass_worn",
+   "x": 9,
+   "y": 6,
+   "solid": 0
+  },
+  {
+   "name": "grass_edge_n",
+   "x": 10,
+   "y": 6,
+   "solid": 0
+  },
+  {
+   "name": "grass_edge_e",
+   "x": 11,
+   "y": 6,
+   "solid": 0
+  },
+  {
+   "name": "grass_edge_s",
+   "x": 4,
+   "y": 7,
+   "solid": 0
+  },
+  {
+   "name": "grass_edge_w",
+   "x": 5,
+   "y": 7,
+   "solid": 0
+  },
+  {
+   "name": "grass_corner_ne",
+   "x": 6,
+   "y": 7,
+   "solid": 0
+  },
+  {
+   "name": "grass_corner_nw",
+   "x": 7,
+   "y": 7,
+   "solid": 0
+  },
+  {
+   "name": "grass_corner_se",
+   "x": 8,
+   "y": 7,
+   "solid": 0
+  },
+  {
+   "name": "grass_corner_sw",
+   "x": 9,
+   "y": 7,
+   "solid": 0
   }
  ]
 }
