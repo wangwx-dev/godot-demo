@@ -42,6 +42,18 @@
 & "D:\personal\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe" --path .
 ```
 
+## 打包发布（Windows）
+
+已配置 Windows Desktop 导出预设（`export_presets.cfg`，输出到 `build/windows/`）。
+首次导出需先在编辑器装一次导出模板：**编辑器 → 项目 → 管理导出模板 → 下载并安装**（对应 4.7.stable）。装好后：
+
+```powershell
+# 无头一键导出
+& "D:\personal\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe" --headless --path . --export-release "Windows Desktop" build/windows/moridemo.exe
+```
+
+产出的 `moridemo.exe` + `.pck` 即为可分发构建。`build/` 已在 .gitignore 内。
+
 ## 开发者验证
 
 一键跑完导入 + 路线审计 + 全流程 + UI 交互 + 定种子冒烟（6 段无头 QA）：

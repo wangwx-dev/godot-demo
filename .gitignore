@@ -2,11 +2,10 @@
 .godot/
 /android/
 
-# 导出产物
+# 导出产物（预设入库共享构建配置，二进制产物忽略）
 /build/
 /exports/
 *.pck
-export_presets.cfg
 
 # 系统文件
 .DS_Store
