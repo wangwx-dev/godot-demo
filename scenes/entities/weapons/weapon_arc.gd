@@ -42,10 +42,8 @@ func _try_attack() -> bool:
 			enemy.take_damage(damage, to_enemy.normalized() * knockback * 6.0)
 	_swing_age = 0.0
 	Sfx.play("bat_swing", -6.0)
-	# 角色跟着做挥砍动作（LPC slash）
-	var wielder: Player = get_parent() as Player
-	if wielder != null:
-		wielder.play_attack(_swing_direction)
+	# 角色跟着做近战动作（cuddlebug stab）
+	_play_wielder_action(_swing_direction)
 	# 挥砍拖影帧：甩向挥击方向（弧形淡影仍保留作命中范围提示）
 	Fx.one_shot(get_tree().current_scene, "weapons/slash", 4,
 			global_position + _swing_direction * _swing_range * 0.55,

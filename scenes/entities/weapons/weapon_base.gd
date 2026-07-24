@@ -30,6 +30,16 @@ func _try_attack() -> bool:
 	return false
 
 
+## 驱动持有者播攻击动作（美术翻修）：近战几何播 stab，远程/投掷播 shoot；
+## 只对挂在 Player 下的主武器有效（副武器自动释放不牵动角色姿态）。
+func _play_wielder_action(direction: Vector2) -> void:
+	var wielder: Player = get_parent() as Player
+	if wielder == null:
+		return
+	var melee: bool = data.geometry == WeaponData.Geometry.ARC or data.geometry == WeaponData.Geometry.CONE
+	wielder.play_attack(direction, "stab" if melee else "shoot")
+
+
 ## ---- 实效数值（基础 + 等级效果加算，再套通用强化） ----
 
 ## 武器等级效果合计：level_effects[0..level-2] 的指定键累加（Lv2 起生效）。

@@ -76,6 +76,40 @@ static func add_action(sf: SpriteFrames, sheet_path: String, prefix: String, col
 			sf.add_frame(anim, frame)
 
 
+## cuddlebug 多方向动画构建（美术翻修）：帧 64px（2×32），行序同 DIR_NAMES=[up,left,down,right]。
+## 把多张精灵表（idle/walk/shoot/…）合进一个 SpriteFrames：每张表贡献 <prefix>_<dir> 四动画。
+## specs: [[sheet_path, prefix, cols, fps, loop], ...]。frame 64px。
+const CB_CELL: int = 64
+
+static func cb_frames(specs: Array) -> SpriteFrames:
+	var key: String = "cb|" + str(specs)
+	if _frames_cache.has(key):
+		return _frames_cache[key]
+	var sf: SpriteFrames = SpriteFrames.new()
+	if sf.has_animation("default"):
+		sf.remove_animation("default")
+	for spec in specs:
+		var sheet_path: String = spec[0]
+		var prefix: String = spec[1]
+		var cols: int = spec[2]
+		var fps: float = spec[3]
+		var loop: bool = spec[4]
+		var tex: Texture2D = load(SPRITE_ROOT + sheet_path)
+		assert(tex != null, "缺少帧图：" + sheet_path)
+		for row in 4:
+			var anim: String = prefix + "_" + DIR_NAMES[row]
+			sf.add_animation(anim)
+			sf.set_animation_speed(anim, fps)
+			sf.set_animation_loop(anim, loop)
+			for col in cols:
+				var frame: AtlasTexture = AtlasTexture.new()
+				frame.atlas = tex
+				frame.region = Rect2(col * CB_CELL, row * CB_CELL, CB_CELL, CB_CELL)
+				sf.add_frame(anim, frame)
+	_frames_cache[key] = sf
+	return sf
+
+
 ## 向量 → LPC 方向名（主导轴决定）
 static func dir_name(v: Vector2) -> String:
 	if absf(v.x) >= absf(v.y):

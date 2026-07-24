@@ -36,6 +36,7 @@ func _try_attack() -> bool:
 	for enemy in targets:
 		direction_sum += (enemy.global_position - global_position).normalized()
 	_cone_direction = direction_sum.normalized() if direction_sum.length() > 0.01 			else (targets[0].global_position - global_position).normalized()
+	_play_wielder_action(_cone_direction)
 	var half_angle: float = deg_to_rad(effective_cone_degrees()) / 2.0
 	var damage: int = effective_damage()
 	var knockback: float = effective_knockback()

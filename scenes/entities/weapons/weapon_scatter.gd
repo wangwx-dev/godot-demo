@@ -18,6 +18,7 @@ func _try_attack() -> bool:
 	if target == null:
 		return false
 	var base_direction: Vector2 = (target.global_position - global_position).normalized()
+	_play_wielder_action(base_direction)
 	var spread: float = deg_to_rad(data.geometry_params.get("spread_degrees", 40.0))
 	var count: int = effective_pellet_count()
 	var damage: int = effective_damage()

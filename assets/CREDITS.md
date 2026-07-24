@@ -16,7 +16,7 @@
 | 作者 | 素材 |
 |---|---|
 | Ittai Manero | Zombie Apocalypse Tileset（主美术：角色/丧尸/场景/道具） |
-| cuddle bug | Apocalypse Character Pack（NPC） |
+| cuddle bug | Apocalypse Character Pack（玩家/丧尸主美术 + NPC） |
 
 ## 无需署名（CC0/OFL，列出以致谢）
 
@@ -29,9 +29,20 @@ TakWolf 等（缝合像素字体，SIL OFL 1.1——随游戏分发时保留 ass
 以下素材**不可再分发**，当前仓库为本地私有可以入库；若将仓库开源/公开，需先移除或改用替代品：
 
 - `assets/sprites/{characters,enemies,weapons,pickups,environment}/` 中源自 Zombie Apocalypse Tileset（Ittai Manero）的全部派生文件
-- cuddle bug 角色包派生文件（实装 NPC 后）
+- cuddle bug 角色包派生文件（玩家/丧尸动画帧、子弹/箭矢，2026-07-24 起为主角色美术）
 
 恢复方式：素材库 `D:\personal\game-assets\` + `tools\import_environment_assets.ps1` / `tools\import_entity_assets.ps1` 重新产出。
+
+## cuddlebug 角色（2026-07-24 美术翻修，玩家/丧尸转正）
+
+- **来源**：[Apocalypse Character Pack](https://cuddle-bug.itch.io/apocalypse) by **cuddle bug**（免费角色包）
+- **授权**：可商用可修改；**禁止再分发/转售素材包本身（修改后亦然）**；署名非必需但受欢迎
+- **派生产物**（`tools/import_cuddlebug.py` 切帧+行序重排+2× 最近邻放大）：
+  - `characters/cb_player_*.png`：幸存者 idle/walk/shoot（持枪）/stab（近战）/crossbow/death，四方向
+  - `enemies/cb_zombie_*.png`：丧尸 idle/walk/attack/death，四方向（三型靠缩放+色相染色区分）
+  - `weapons/cb_bullet.png` `weapons/cb_arrow.png`：配套弹丸/箭矢
+- **合规**：仓库只含上述**加工后的衍生文件**，原始素材包留在项目外的素材库（game-assets），不入 git
+- 取代 2026-07-18 的 LPC 幸存者/丧尸（旧帧图保留备用，未删）
 
 ## LPC 角色（2026-07-18 角色素材升级）
 

@@ -44,10 +44,15 @@ var _player: Player
 func _ready() -> void:
 	add_to_group("enemies")
 	hp = roundi(data.max_hp * hp_multiplier)
-	body.sprite_frames = Fx.dir_frames("enemies/" + data.sprite_set + ".png", 7.0)
+	# cuddlebug 丧尸（美术翻修）：四方向 walk/idle/attack；三型靠体型缩放+色相染色区分
+	body.sprite_frames = Fx.cb_frames([
+		["enemies/cb_zombie_walk.png", "walk", 11, 8.0, true],
+		["enemies/cb_zombie_idle.png", "idle", 6, 5.0, true],
+		["enemies/cb_zombie_attack.png", "attack", 9, 12.0, false],
+	])
 	body.play("walk_down")
-	body.frame = randi() % 8  # 错帧起播，尸群不齐步走
-	body.offset = Vector2(0, -18)
+	body.frame = randi() % 11  # 错帧起播，尸群不齐步走
+	body.offset = Vector2(0, -14)
 	body.scale = Vector2.ONE * data.sprite_scale
 	# 染色保留"轮廓即身份"的颜色语言（同底板丧尸靠体型+色相区分）
 	body.modulate = Color.WHITE.lerp(data.outline_color, 0.35)

@@ -57,7 +57,12 @@ func _process(_delta: float) -> void:
 		# 起局传送（--start-map）：商店 QA 顺带塞满测试物资走兑换播报
 		var target: String = _start_map
 		_start_map = ""
-		if target == "shop":
+		if target == "battle":
+			RunState.main_weapon = load("res://resources/weapons/weapon_pistol.tres")
+			RunState.sub_weapon = load("res://resources/weapons/weapon_molotov.tres")
+			get_tree().change_scene_to_file.call_deferred(
+					"res://scenes/levels/test_arena/test_arena.tscn")
+		elif target == "shop":
 			RunState.try_add_loot(load("res://resources/loot/loot_canned_food.tres"))
 			RunState.try_add_loot(load("res://resources/loot/loot_canned_food.tres"))
 			RunState.try_add_loot(load("res://resources/loot/loot_medicine.tres"))
