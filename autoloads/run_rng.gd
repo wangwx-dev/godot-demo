@@ -32,8 +32,10 @@ func stream(stream_name: String) -> RandomNumberGenerator:
 
 
 ## 死亡/撤离后重开新局：随机新种子重建全部流。
+## --seed=N 命令行参数存在时优先用它（调试/复现/每日挑战），否则随机。
 func new_run() -> void:
-	start_run(_make_random_seed())
+	var forced: int = _parse_seed_arg()
+	start_run(forced if forced != 0 else _make_random_seed())
 
 
 func _make_random_seed() -> int:

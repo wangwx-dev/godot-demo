@@ -4,6 +4,8 @@ extends Control
 
 const BATTLE_SCENE: String = "res://scenes/levels/test_arena/test_arena.tscn"
 const SETTINGS_PANEL: Script = preload("res://scenes/ui/settings_panel.gd")
+const CREDITS_PANEL: Script = preload("res://scenes/ui/credits_panel.gd")
+const CONFIRM_DIALOG: Script = preload("res://scenes/ui/confirm_dialog.gd")
 const VERSION: String = "v0.9 抢先体验"
 
 var _settings_panel: Control
@@ -50,6 +52,7 @@ func _build_ui() -> void:
 
 	center.add_child(_make_button("开始逃亡", _on_start))
 	center.add_child(_make_button("设置", _on_settings))
+	center.add_child(_make_button("鸣谢", _on_credits))
 	center.add_child(_make_button("退出", _on_quit))
 
 	var version: Label = Label.new()
@@ -88,5 +91,12 @@ func _on_settings() -> void:
 	add_child(_settings_panel)
 
 
+func _on_credits() -> void:
+	add_child(CREDITS_PANEL.new())
+
+
 func _on_quit() -> void:
-	get_tree().quit()
+	var dlg: ConfirmDialog = CONFIRM_DIALOG.new()
+	dlg.prompt = "确定退出游戏？"
+	dlg.on_confirm = func() -> void: get_tree().quit()
+	add_child(dlg)

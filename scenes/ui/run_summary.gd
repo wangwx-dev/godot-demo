@@ -43,6 +43,7 @@ static func show_extraction(parent: Node) -> RunSummary:
 
 func _ready() -> void:
 	layer = 95
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("run_summary")  # 无头流转测试的完成探针
 	var dim: ColorRect = ColorRect.new()
 	dim.color = Color(0.04, 0.02, 0.02, 0.72)
@@ -71,3 +72,20 @@ func _ready() -> void:
 		label.add_theme_color_override("font_outline_color", Color.BLACK)
 		label.add_theme_constant_override("outline_size", 4)
 		box.add_child(label)
+	var btn_row: HBoxContainer = HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.add_theme_constant_override("separation", 16)
+	box.add_child(btn_row)
+	btn_row.add_child(_make_action_button("再来一局", func() -> void: MapFlow.restart_run(get_tree())))
+	btn_row.add_child(_make_action_button("回主菜单", func() -> void: MapFlow.to_main_menu(get_tree())))
+
+
+func _make_action_button(text: String, handler: Callable) -> Button:
+	var btn: Button = Button.new()
+	btn.text = text
+	btn.custom_minimum_size = Vector2(180, 44)
+	btn.add_theme_font_size_override("font_size", 20)
+	btn.pressed.connect(func() -> void:
+			Sfx.play("ui_confirm", -5.0)
+			handler.call())
+	return btn

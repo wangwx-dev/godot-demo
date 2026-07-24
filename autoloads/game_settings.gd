@@ -7,12 +7,30 @@ const CONFIG_PATH: String = "user://settings.cfg"
 const BUSES: Array[String] = ["Master", "BGM", "SFX"]
 
 var _volumes: Dictionary = {"Master": 0.9, "BGM": 0.7, "SFX": 0.9}
+var _fullscreen: bool = false
 
 
 func _ready() -> void:
 	_load()
 	for bus_name in BUSES:
 		_apply(bus_name)
+	_apply_fullscreen()
+
+
+func fullscreen() -> bool:
+	return _fullscreen
+
+
+func set_fullscreen(on: bool) -> void:
+	_fullscreen = on
+	_apply_fullscreen()
+	_save()
+
+
+func _apply_fullscreen() -> void:
+	DisplayServer.window_set_mode(
+			DisplayServer.WINDOW_MODE_FULLSCREEN if _fullscreen
+			else DisplayServer.WINDOW_MODE_WINDOWED)
 
 
 func volume(bus_name: String) -> float:
@@ -41,10 +59,13 @@ func _load() -> void:
 	for bus_name in BUSES:
 		if cfg.has_section_key("audio", bus_name):
 			_volumes[bus_name] = float(cfg.get_value("audio", bus_name))
+	if cfg.has_section_key("video", "fullscreen"):
+		_fullscreen = bool(cfg.get_value("video", "fullscreen"))
 
 
 func _save() -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	for bus_name in BUSES:
 		cfg.set_value("audio", bus_name, _volumes[bus_name])
+	cfg.set_value("video", "fullscreen", _fullscreen)
 	cfg.save(CONFIG_PATH)

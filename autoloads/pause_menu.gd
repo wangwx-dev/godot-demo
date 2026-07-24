@@ -6,11 +6,13 @@ extends CanvasLayer
 
 const MODAL_PAUSE: Script = preload("res://scripts/modal_pause.gd")
 const SETTINGS_PANEL: Script = preload("res://scenes/ui/settings_panel.gd")
+const CONFIRM_DIALOG: Script = preload("res://scenes/ui/confirm_dialog.gd")
 const MAIN_MENU: String = "res://scenes/ui/main_menu.tscn"
 
 var _root: Control
 var _menu_box: VBoxContainer
 var _open: bool = false
+var _settings_panel: SettingsPanel
 
 
 func _ready() -> void:
@@ -31,6 +33,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if current == null or not current.is_in_group("levels"):
 		return
 	get_viewport().set_input_as_handled()
+	# 设置面板开着时，ESC 先关面板（不恢复游戏）
+	if _settings_panel != null and is_instance_valid(_settings_panel):
+		_settings_panel.queue_free()
+		_settings_panel = null
+		return
 	if _open:
 		_resume()
 	else:
@@ -60,7 +67,7 @@ func _build_ui() -> void:
 	_menu_box.add_child(_make_button("继续", _resume))
 	_menu_box.add_child(_make_button("设置", _on_settings))
 	_menu_box.add_child(_make_button("回主菜单", _on_main_menu))
-	_menu_box.add_child(_make_button("退出游戏", func() -> void: get_tree().quit()))
+	_menu_box.add_child(_make_button("退出游戏", _on_quit))
 
 
 func _make_button(text: String, handler: Callable) -> Button:
@@ -83,12 +90,25 @@ func _show_menu() -> void:
 func _resume() -> void:
 	_open = false
 	visible = false
+	if _settings_panel != null and is_instance_valid(_settings_panel):
+		_settings_panel.queue_free()
+		_settings_panel = null
 	MODAL_PAUSE.release(self)
 
 
 func _on_settings() -> void:
-	var panel: SettingsPanel = SETTINGS_PANEL.new()
-	_root.add_child(panel)
+	if _settings_panel != null and is_instance_valid(_settings_panel):
+		return
+	_settings_panel = SETTINGS_PANEL.new()
+	_settings_panel.on_closed = func() -> void: _settings_panel = null
+	_root.add_child(_settings_panel)
+
+
+func _on_quit() -> void:
+	var dlg: ConfirmDialog = CONFIRM_DIALOG.new()
+	dlg.prompt = "确定退出游戏？（本局进度丢失）"
+	dlg.on_confirm = func() -> void: get_tree().quit()
+	_root.add_child(dlg)
 
 
 func _on_main_menu() -> void:

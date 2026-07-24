@@ -63,6 +63,8 @@ func _ready() -> void:
 	# 副武器：复装跨图保留的（RunState），起始默认燃烧瓶
 	_equip_sub(RunState.sub_weapon if RunState.sub_weapon != null else MOLOTOV_DATA)
 	# 主武器：新局第 1 天且尚未选过 → 弹起始二选一；否则复装保留的
+	if RunState.day == 1 and RunState.main_weapon == null:
+		add_child(ControlsHint.new())  # 首图操作提示（8s 淡出）
 	if RunState.main_weapon == null and RunState.day == 1:
 		var starter: StarterWeaponMenu = StarterWeaponMenu.new()
 		starter.chosen.connect(_equip)
@@ -276,6 +278,9 @@ var SUB_WEAPON_CLASSES: Dictionary = {
 
 
 func _equip(weapon_data: WeaponData) -> void:
+	# 重捡手持的同一把武器：不清等级、不重建（否则白清专属精通）
+	if _current_weapon != null and _current_weapon.data == weapon_data:
+		return
 	if _current_weapon != null:
 		RunState.clear_weapon_level(_current_weapon.data)  # 换主武器清专属等级（通用强化保留）
 		_current_weapon.queue_free()
@@ -288,6 +293,8 @@ func _equip(weapon_data: WeaponData) -> void:
 
 
 func _equip_sub(weapon_data: WeaponData) -> void:
+	if _current_sub_weapon != null and _current_sub_weapon.data == weapon_data:
+		return
 	if _current_sub_weapon != null:
 		RunState.clear_weapon_level(_current_sub_weapon.data)
 		_current_sub_weapon.queue_free()

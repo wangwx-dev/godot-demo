@@ -109,8 +109,13 @@ func weapon_level(weapon: WeaponData) -> int:
 
 ## 换武器规则（weapon-design）：换走的武器专属等级清零，通用强化不受影响；
 ## 换装决策"要不要放弃已练到 3 级的球棒"才有分量。
+## 必须同步清 weapon_levels（战斗读）与对应 mastery 的 upgrades 层数（三选一卡入池/卡面读），
+## 否则两账本失联：重捡武器战斗回 Lv1 但卡面按旧层数显示、满层武器换走后卡永久滤除锁死。
 func clear_weapon_level(weapon: WeaponData) -> void:
 	weapon_levels.erase(weapon)
+	for upgrade in upgrades.keys():
+		if upgrade.effect == UpgradeData.Effect.WEAPON_LEVEL and upgrade.weapon_ref == weapon:
+			upgrades.erase(upgrade)
 
 
 func apply_upgrade(upgrade: UpgradeData) -> void:

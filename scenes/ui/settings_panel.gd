@@ -36,6 +36,8 @@ func _ready() -> void:
 	for entry in BUSES:
 		box.add_child(_make_slider_row(entry[0], entry[1]))
 
+	box.add_child(_make_fullscreen_row())
+
 	var close_btn: Button = Button.new()
 	close_btn.text = "返回"
 	close_btn.custom_minimum_size = Vector2(0, 40)
@@ -68,6 +70,23 @@ func _make_slider_row(bus_name: String, label_text: String) -> HBoxContainer:
 			pct.text = "%d%%" % roundi(v * 100.0))
 	row.add_child(slider)
 	row.add_child(pct)
+	return row
+
+
+func _make_fullscreen_row() -> HBoxContainer:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var label: Label = Label.new()
+	label.text = "全屏"
+	label.custom_minimum_size = Vector2(80, 0)
+	label.add_theme_font_size_override("font_size", 18)
+	row.add_child(label)
+	var toggle: CheckButton = CheckButton.new()
+	toggle.button_pressed = GameSettings.fullscreen()
+	toggle.toggled.connect(func(on: bool) -> void:
+			Sfx.play("ui_confirm", -8.0)
+			GameSettings.set_fullscreen(on))
+	row.add_child(toggle)
 	return row
 
 
