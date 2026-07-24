@@ -37,12 +37,18 @@ func _ready() -> void:
 
 ## 站点表：[位置, 名称, 说明, 按住时长, 动作]
 func _stations() -> Array:
-	return [
-		[Vector2(480, 220), "治疗", "20 金回 30 血", SERVICE_HOLD, _buy_heal],
+	var medic: bool = MetaProgress.is_unlocked(MetaProgress.MEDIC)
+	var heal_desc: String = "20 金回 40 血（医师）" if medic else "20 金回 30 血"
+	var result: Array = [
+		[Vector2(480, 220), "医疗站" if medic else "治疗", heal_desc, SERVICE_HOLD, _buy_heal],
 		[Vector2(700, 220), "重整构筑", "%d 金开一次三选一" % _reroll_cost(), SERVICE_HOLD, _buy_reroll],
 		[Vector2(480, 500), "背包扩容", "已购" if RunState.backpack_expanded else "25 金 +2 格（限 1 次）", SERVICE_HOLD, _buy_expand],
 		[Vector2(700, 500), "信号弹", "免费·提前发起总攻！", FLARE_HOLD, _fire_flare],
 	]
+	# 军械师解锁：休整图多一个武器补给站（30 金随机换一把主/副武器）
+	if MetaProgress.is_unlocked(MetaProgress.ARMORER):
+		result.append([Vector2(590, 360), "军械补给", "30 金·随机武器", SERVICE_HOLD, _buy_weapon])
+	return result
 
 
 func _reroll_cost() -> int:
@@ -74,7 +80,8 @@ func _buy_heal() -> void:
 	if RunState.gold < HEAL_COST or RunState.hp >= RunState.max_hp:
 		return
 	RunState.add_gold(-HEAL_COST)
-	RunState.heal(HEAL_AMOUNT)
+	var amount: int = HEAL_AMOUNT + 10 if MetaProgress.is_unlocked(MetaProgress.MEDIC) else HEAL_AMOUNT
+	RunState.heal(amount)
 
 
 func _buy_reroll() -> void:
@@ -93,6 +100,23 @@ func _buy_expand() -> void:
 	RunState.backpack_cap += 2
 	RunState.backpack_expanded = true
 	EventBus.backpack_changed.emit()
+
+
+## 军械补给（军械师解锁）：30 金随机换一把武器（走 loot 流）。
+func _buy_weapon() -> void:
+	const COST: int = 30
+	if RunState.gold < COST:
+		return
+	RunState.add_gold(-COST)
+	var rng: RandomNumberGenerator = RunRng.stream("loot")
+	var pool: Array = ResourcePoint.WEAPON_POOL
+	var weapon: WeaponData = pool[rng.randi_range(0, pool.size() - 1)]
+	# 直接写入 RunState 装备槽（下一张战斗图复装时生效）
+	if weapon.slot == WeaponData.Slot.MAIN:
+		RunState.main_weapon = weapon
+	else:
+		RunState.sub_weapon = weapon
+	print("[RestMap] 军械补给换得: %s" % weapon.display_name)
 
 
 func _fire_flare() -> void:

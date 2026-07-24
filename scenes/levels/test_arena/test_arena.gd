@@ -13,6 +13,9 @@ const PICKUP_SCENE: PackedScene = preload("res://scenes/entities/pickups/pickup.
 const ELITE_SCENE: PackedScene = preload("res://scenes/entities/enemies/enemy_elite.tscn")
 const WALKER_DATA: EnemyData = preload("res://resources/enemies/enemy_walker.tres")
 const RUNNER_DATA: EnemyData = preload("res://resources/enemies/enemy_runner.tres")
+const RESCUE_SCENE: Script = preload("res://scenes/entities/rescue/rescue_point.gd")
+
+const RESCUE_CHANCE: float = 0.4  ## 普通战斗图救援点出现率（npc-design ❓试玩定）
 
 const VEHICLE_MIN_SPAWN_DIST: float = 1200.0  ## 载具距投放点（不能落地就看见出口）
 const VEHICLE_MIN_GAP: float = 1000.0  ## 载具两两间距（找到一辆≠找到全部）
@@ -83,6 +86,7 @@ func _ready() -> void:
 	minimap.setup(_fog)
 	_place_vehicles()
 	_place_elites()
+	_place_rescue_point()
 	EventBus.player_died.connect(_on_player_died)
 	Sfx.bgm("battle")
 	queue_redraw()
@@ -171,6 +175,39 @@ func _place_elites() -> void:
 		add_child(elite)
 		elite.global_position = pos
 		print("[TestArena] 本图有游荡精英")
+
+
+## 救援点（npc-design）：普通图 40% / 精英图必出 1 个被困 NPC + 守卫尸群。
+## 复用 supply 插槽取远位（离出生远，和资源点争停留预算）；NPC id 走 enemy 流轮选。
+func _place_rescue_point() -> void:
+	var rng: RandomNumberGenerator = RunRng.stream("enemy")
+	if not _is_elite_map and rng.randf() >= RESCUE_CHANCE:
+		return
+	# 从 supply 插槽里挑离出生最远的一个当救援点位（避免和玩家太近）
+	var best_pos: Vector2 = Vector2.INF
+	var best_dist: float = 400.0
+	for slot in _assembler.supply_slots:
+		var d: float = slot.distance_to(player.position)
+		if d > best_dist:
+			best_dist = d
+			best_pos = slot
+	if best_pos == Vector2.INF:
+		return
+	var rescue: RescuePoint = RESCUE_SCENE.new()
+	# 优先解救尚未解锁的 NPC（引导玩家补全据点），全解锁则随机
+	rescue.npc_id = _pick_rescue_npc(rng)
+	rescue.position = best_pos
+	add_child(rescue)
+	print("[TestArena] 本图有救援点：", rescue.npc_id)
+
+
+func _pick_rescue_npc(rng: RandomNumberGenerator) -> String:
+	var locked: Array[String] = []
+	for npc_id in MetaProgress.ALL_NPCS:
+		if not MetaProgress.is_unlocked(npc_id):
+			locked.append(npc_id)
+	var pool: Array = locked if not locked.is_empty() else MetaProgress.ALL_NPCS
+	return pool[rng.randi_range(0, pool.size() - 1)]
 
 
 func _make_elite(affix_count: int, rng: RandomNumberGenerator) -> EnemyElite:

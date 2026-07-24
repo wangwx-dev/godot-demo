@@ -46,6 +46,14 @@ func _build_ui() -> void:
 	subtitle.add_theme_color_override("font_color", Color(0.7, 0.7, 0.65))
 	center.add_child(subtitle)
 
+	if MetaProgress.unlocked_count() > 0:
+		var meta_label: Label = Label.new()
+		meta_label.text = "已救援 %d/%d 位幸存者" % [MetaProgress.unlocked_count(), MetaProgress.ALL_NPCS.size()]
+		meta_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		meta_label.add_theme_font_size_override("font_size", 15)
+		meta_label.add_theme_color_override("font_color", Color(0.45, 0.75, 0.85))
+		center.add_child(meta_label)
+
 	var spacer: Control = Control.new()
 	spacer.custom_minimum_size = Vector2(0, 30)
 	center.add_child(spacer)

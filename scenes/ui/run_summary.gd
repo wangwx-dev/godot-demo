@@ -17,6 +17,7 @@ static func show_death(parent: Node) -> RunSummary:
 		["撑到了第 %d/%d 天" % [mini(RunState.day, RunState.TOTAL_DAYS), RunState.TOTAL_DAYS], Color(0.85, 0.85, 0.8)],
 		["击杀 %d 只丧尸" % RunState.kills, Color(0.85, 0.85, 0.8)],
 		["%d 金币与 %d 件物资……全部丢失" % [RunState.gold, RunState.backpack.size()], Color(0.8, 0.5, 0.3)],
+		["本局解救 %d 位幸存者（永久解锁保留）" % RunState.rescued_this_run.size(), Color(0.45, 0.75, 0.85)],
 		["", Color.WHITE],
 		["按 R 再来一局 · M 回主菜单", Color(0.6, 0.75, 0.6)],
 	]
@@ -33,6 +34,7 @@ static func show_extraction(parent: Node) -> RunSummary:
 		["第 %d 天登上救援载具" % mini(RunState.day, RunState.TOTAL_DAYS), Color(0.85, 0.85, 0.8)],
 		["击杀 %d 只丧尸" % RunState.kills, Color(0.85, 0.85, 0.8)],
 		["带出 %d 金币" % RunState.gold, Color(0.95, 0.8, 0.25)],
+		["解救 %d 位幸存者（累计 %d/%d）" % [RunState.rescued_this_run.size(), MetaProgress.unlocked_count(), MetaProgress.ALL_NPCS.size()], Color(0.45, 0.75, 0.85)],
 		["（元进度商店在路上——先记在功劳簿上）", Color(0.6, 0.6, 0.6)],
 		["", Color.WHITE],
 		["按 R 开始新的一局 · M 回主菜单", Color(0.6, 0.75, 0.6)],

@@ -47,7 +47,7 @@ func _on_panel_draw() -> void:
 				var map_pos: Vector2 = _to_map(world)
 				_panel.draw_rect(Rect2(map_pos, Vector2(cell_px, cell_px)), Color(0.35, 0.36, 0.33, 0.55))
 	# 已发现资源点/绷带/载具
-	for entry in [["resource_points", Color(0.95, 0.8, 0.2)], ["bandages", Color(0.9, 0.35, 0.3)], ["vehicles", Color(0.3, 0.9, 0.5)]]:
+	for entry in [["resource_points", Color(0.95, 0.8, 0.2)], ["bandages", Color(0.9, 0.35, 0.3)], ["vehicles", Color(0.3, 0.9, 0.5)], ["rescue_points", Color(0.35, 0.85, 0.95)]]:
 		for node in _panel.get_tree().get_nodes_in_group(entry[0]):
 			var node_2d: Node2D = node as Node2D
 			if node_2d == null or node_2d.get("discovered") != true:

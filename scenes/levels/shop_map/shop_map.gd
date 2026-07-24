@@ -94,12 +94,16 @@ func _advance_broadcast(delta: float) -> void:
 
 ## 货架表：[位置, 名称, 说明文案, 动作]
 func _stations() -> Array:
-	return [
+	var result: Array = [
 		[Vector2(520, 300), "绷带",
 				"%d 金回 %d 血" % [BANDAGE_COST, BANDAGE_HEAL], _buy_bandage],
 		[Vector2(760, 300), "背包扩容",
 				"已购" if RunState.backpack_expanded else "%d 金 +2 格（限 1 次）" % EXPAND_COST, _buy_expand],
 	]
+	# 老兵解锁：商店多一格军火货架（15 金买绷带×1 更便宜位——老兵进货渠道）
+	if MetaProgress.is_unlocked(MetaProgress.VETERAN):
+		result.append([Vector2(640, 460), "老兵私货", "%d 金回 %d 血" % [BANDAGE_COST - 3, BANDAGE_HEAL + 5], _buy_veteran_bandage])
+	return result
 
 
 func _physics_process(delta: float) -> void:
@@ -129,6 +133,14 @@ func _buy_bandage() -> void:
 		return
 	RunState.add_gold(-BANDAGE_COST)
 	RunState.heal(BANDAGE_HEAL)
+
+
+## 老兵私货（老兵解锁）：更便宜更足量的绷带。
+func _buy_veteran_bandage() -> void:
+	if RunState.gold < BANDAGE_COST - 3 or RunState.hp >= RunState.max_hp:
+		return
+	RunState.add_gold(-(BANDAGE_COST - 3))
+	RunState.heal(BANDAGE_HEAL + 5)
 
 
 func _buy_expand() -> void:

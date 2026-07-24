@@ -82,7 +82,7 @@ func _refresh() -> void:
 
 ## 光圈内的可发现物打标（迷你图渲染依据）。
 func _discover_points() -> void:
-	for group_name in ["resource_points", "bandages", "vehicles"]:
+	for group_name in ["resource_points", "bandages", "vehicles", "rescue_points"]:
 		for node in get_tree().get_nodes_in_group(group_name):
 			var node_2d: Node2D = node as Node2D
 			if node_2d == null or node_2d.get("discovered") == true:

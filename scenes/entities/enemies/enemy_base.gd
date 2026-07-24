@@ -19,6 +19,8 @@ var hp_multiplier: float = 1.0
 var speed_multiplier: float = 1.0
 ## 全体移速硬顶（崩溃期 200 < 玩家 220，"赶你走不是处刑"）。INF = 无顶。
 var speed_cap: float = INF
+## 救援守卫编队标记（npc-design）：>=0 表示是某救援点的预置守卫，清零判定只认它。
+var rescue_guard_id: int = -1
 
 ## 控场接口（weapon-design 副武器：捕兽夹定身/闪光弹眩晕）。
 var _control_timer: float = 0.0
