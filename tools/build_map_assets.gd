@@ -256,11 +256,11 @@ func _grass_at(is_grass: Array, x: int, y: int) -> bool:
 
 func _grass_body_tile(x: int, y: int, seed_val: int) -> String:
 	var r: float = _hash2(x, y, seed_val)
-	if r < 0.5:
+	if r < 0.52:
 		return "grass_a"
-	if r < 0.82:
+	if r < 0.86:
 		return "grass_b"
-	if r < 0.93:
+	if r < 0.96:
 		return "grass_dry_a"
 	return "grass_worn"
 
@@ -269,27 +269,27 @@ func _dirt_body_tile(x: int, y: int, seed_val: int, style: String) -> String:
 	var r: float = _hash2(x, y, seed_val + 99)
 	if style == "grass":
 		# 乡村的土区更多枯草感
-		if r < 0.55:
+		if r < 0.5:
 			return "dirt_a"
-		if r < 0.78:
+		if r < 0.75:
 			return "grass_dry_b"
-		if r < 0.9:
+		if r < 0.95:
 			return "dirt_b"
 		return "dirt_twigs_a"
 	if style == "scorched":
 		if r < 0.5:
 			return "dirt_a"
-		if r < 0.75:
+		if r < 0.78:
 			return "dirt_b"
-		if r < 0.9:
+		if r < 0.93:
 			return "grass_dry_b"
 		return "dirt_twigs_b"
 	# dirt（城镇）
-	if r < 0.55:
+	if r < 0.52:
 		return "dirt_a"
-	if r < 0.82:
+	if r < 0.85:
 		return "dirt_b"
-	if r < 0.92:
+	if r < 0.96:
 		return "grass_dry_a"
 	return "dirt_twigs_a"
 
